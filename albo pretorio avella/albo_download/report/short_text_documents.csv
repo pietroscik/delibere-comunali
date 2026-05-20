@@ -1,0 +1,51 @@
+pdf_name,doc_type,category,subcategory,classification_confidence,source,text_sha256,text_chars,text_words,unique_words,euro_mentions,cig_mentions,cup_mentions,date_mentions,years_mentioned,importo_max,importo_sum,importi_count,accounting_relevant,missing_amount_expected
+Avviso___allegato1777975763_1.pdf,Avviso,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,0,0,0,,,,0,False,False
+Delibera_1182011__5485_parere_revisore_9.pdf,Delibera,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,0,0,0,,,,0,False,False
+Avviso___allegato1778056201_1.pdf,Avviso,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,0,0,0,,,,0,False,False
+Delibera_11__5417_Comunicazione_Consigliera_dott-ssa_uso_2.pdf,Delibera,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,0,0,0,,,,0,False,False
+Delibera_76__Vai_2.php,Delibera,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,0,0,0,,,,0,False,False
+atto_883__Vai_1.php,unknown,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,0,0,0,,,,0,False,False
+atto_2672000__Vai_5.php,unknown,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,0,0,0,,,,0,False,False
+atto_241__Vai_2.php,unknown,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,0,0,0,,,,0,False,False
+Delibera_41__allegato1774957293_3.pdf,Delibera,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,0,0,0,,,,0,False,False
+Delibera_60__5549_doc01890720260428103035_2.pdf,Delibera,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,0,0,0,,,,0,False,False
+atto___allegato1775644556_1.pdf,unknown,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,0,0,0,,,,0,False,False
+atto___allegato1772192833_1.pdf,unknown,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,0,0,0,,,,0,False,False
+atto___allegato1777026772_1.pdf,unknown,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,0,0,0,,,,0,False,False
+atto___allegato1774431945_1.pdf,unknown,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,0,0,0,,,,0,False,False
+atto___allegato1773047907_1.pdf,unknown,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,0,0,0,,,,0,False,False
+Delibera_9__5339_parere_su_bilancio_4.pdf,Delibera,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,0,0,0,,,,0,False,False
+atto_1182011__Vai_6.php,unknown,,,,text,de713feacc6766714c084c336baa2f1f315a59bc51a21a11e14a36eaeede9fce,167,24,12,0,0,0,2,2025,,,0,False,False
+atto_1__Vai_1.php,unknown,,,,text,50d861e7d5c138c1b99245368d187312332734275afb7844e0fff2f280c4270e,165,24,12,0,0,0,2,2025,,,0,False,False
+Delibera_1652001__5430_VERBALE_N-_3_DEL_17-03-2026_dellOrg2028_2.pdf,Delibera,,,,text,7b60217c7c3e96b78b625f545bc30973209418e0a86cbd9b52a0a3681fea31df,335,48,12,0,0,0,4,2026,,,0,False,False
+Delibera_52__5511_attestazione_tempi_medi_di_pagamento_5.pdf,Delibera,Contabilità,Liquidazione,high,text,646415c871f0f0289e871c1fb8e3d639f0e6903b761bb3f193dcdec999ff4791,355,57,49,0,0,0,0,"2014,2025",,,0,True,True
+atto___5321_ElencoElettoriResidentiTempora_1772627130_1.pdf,Elenco,Servizi Demografici,,high,text,a5534bb15351652d335154f1bfdaa78c759f25702d10478c21d75755341cf5cd,416,72,55,0,0,0,1,"2001,2003,2026",,,0,False,False
+atto_19922025__Vai_3.php,unknown,,,,text,7fc5350a8ce2a81b9c01a7f9f06b720d3cf3754fb0c2b5168ffe43312f410112,430,74,46,0,0,0,1,"2000,2025",,,0,False,False
+atto___Vai_4.php,unknown,Contabilità,,high,text,3ff4cde069dd68f0e9e83fb41150dbb330d539960bfca6d98f40a7592df2a683,442,80,53,0,0,0,1,"2000,2025",,,0,True,True
+atto___5303_sportello_lauro_Marcato_Marcat_1772452908_2.pdf,unknown,Servizi Sociali,,high,text,8b50b1e3d94fedf6f5dbe87b5c4a73e9d995b0e682c4d0acdc77996d2dada660,580,82,69,0,0,0,2,2026,,,0,False,False
+atto___5303_sportello_mugnano_del_cardinal_1772452908_1.pdf,unknown,Servizi Sociali,,high,text,e2c0bf51321c5b01ad60f4ac00210d2a3ebfbbeea12c205b482eccaf86ac3304,608,86,74,0,0,0,2,2026,,,0,False,False
+atto_176__Vai_2.php,VistoContabile,Contabilità,,high,text,0bbdb8a8f72d16d821456ff0857e3478c33fb7e61d43bc9535354cc6ae57948f,482,89,53,0,0,0,1,"2000,2025",,,0,True,False
+Avviso_802021__Vai_2.php,Avviso,Contabilità,,high,text,b17b8ac276bd04bb67c1e275a9ffb551ad9f932dec946f07b4f51f3841d75e41,482,89,53,0,0,0,1,"2000,2025",,,0,True,True
+atto_2__Vai_3.php,VistoContabile,Contabilità,,high,text,16254afc0d3f3567b05c506365cafc10e3ed6606225e454f085da9cb5e5ddf3d,482,89,53,0,0,0,1,"2000,2025",,,0,True,False
+Avviso_2__Vai_4.php,Avviso,Contabilità,,high,text,4082a4c28c353ed40d083e0dbdd6af2cfe79abddffa6a1e731730c22857a05ee,482,89,53,0,0,0,1,"2000,2025",,,0,True,True
+Determinazione_172025__Vai_2.php,Determinazione,Contabilità,,high,text,28ce5b394f148ee3ea90a1e9423564f0a4b004b92df14f843b4ada4de4761052,482,89,53,0,0,0,1,"2000,2025",,,0,True,True
+atto_252025__Vai_3.php,VistoContabile,Contabilità,,high,text,d8eaa49197fcc0765144e03664b8f6bd317351dee84ae09e3f65b415153bf7d8,482,89,53,0,0,0,1,"2000,2025",,,0,True,False
+atto_652025__Vai_2.php,VistoContabile,Contabilità,,high,text,5a3b24f7d32f18b72f9301de320547309c01f45fdb51a43637ee407034ffef41,482,89,53,0,0,0,1,"2000,2025",,,0,True,False
+atto__19102025_Vai_2.php,Ordinanza,Affari Generali,,high,text,79bd50ca6cf42460369b22d9d31ed3ed3578ecfd65f74071d29d318e62f1a423,540,89,58,0,0,0,3,2025,,,0,False,False
+Determinazione_163__5329_VistoContabile_2.pdf,VistoContabile,Contabilità,,high,text,512c81ecf9669bf3f26cc501b89cdd5611620a895ee90d1b216680eb8818bf15,525,98,57,0,0,0,1,"2000,2026",,,0,True,False
+Determinazione_622160__5492_VistoContabile_2.pdf,VistoContabile,Contabilità,,high,text,6c69ac925a84996be71dfd4c63fc10b67abfc85d4886f4b321aefeaf2dadebab,525,98,57,0,0,0,1,"2000,2026",,,0,True,False
+Determinazione_6222058__5493_VistoContabile_2.pdf,VistoContabile,Contabilità,,high,text,6c69ac925a84996be71dfd4c63fc10b67abfc85d4886f4b321aefeaf2dadebab,525,98,57,0,0,0,1,"2000,2026",,,0,True,False
+Determinazione_220__5438_VistoContabile_2.pdf,VistoContabile,Contabilità,,high,text,1ae0ff95760fdee8e7f1c5c02f1575ee8e7f2052225302244012ac4ae7ac2a5e,525,98,57,0,0,0,1,"2000,2026",,,0,True,False
+Determinazione_5692025__5588_VistoContabile_2.pdf,VistoContabile,Contabilità,,high,text,fdc0b214947154163bcc689dcc37acc6853e4b4fad77cbcb41f24776f67fd9be,525,98,56,0,0,0,1,"2000,2026",,,0,True,False
+Avviso_198__5394_VistoContabile_2.pdf,VistoContabile,Contabilità,,high,text,34e4534ea0eafdfff26e0c2c913cd0aca9a91fee6037158bfaf7c7a0a99c3eb5,525,98,57,0,0,0,1,"2000,2026",,,0,True,False
+Determinazione_5692025__5589_VistoContabile_2.pdf,VistoContabile,Contabilità,,high,text,fdc0b214947154163bcc689dcc37acc6853e4b4fad77cbcb41f24776f67fd9be,525,98,56,0,0,0,1,"2000,2026",,,0,True,False
+Determinazione_15_05032026_5330_VistoContabile_2.pdf,VistoContabile,Contabilità,,high,text,67224b4acb206aa6b82d331d7e07e305c50f625acfa3992832821dac6ea0063b,525,98,57,0,0,0,1,"2000,2026",,,0,True,False
+Determinazione_193__5387_VistoContabile_3.pdf,VistoContabile,Contabilità,,high,text,e110c3d888378e1399dd94c98a1c457c3537b1ef3ab32a7d8d8e96b0c70cbdef,525,98,57,0,0,0,1,"2000,2026",,,0,True,False
+Determinazione_306__5580_VistoContabile_2.pdf,VistoContabile,Contabilità,,high,text,061adb5c9510510e12adb5b3dbc487212411198b3e3cc67f91322f8a0047d0bb,525,98,57,0,0,0,1,"2000,2026",,,0,True,False
+Delibera_6__5336_AttestazionePubblicazione_4.pdf,AttestazionePubblicazione,Pubblicazione e Trasparenza,,high,text,ca896f080919856998c78a2f69f2dbb56e8f2a8898a8ac658d205341f6effed3,662,102,76,0,0,0,3,"2000,2026,2028",,,0,False,False
+Delibera_4__5334_AttestazionePubblicazione_4.pdf,AttestazionePubblicazione,Regolamenti,,ml_predicted,text,8cef28d24d52fb89df25f1f2fb8309fd78453aee4df67d98a6e69de83ddd59ee,673,102,76,0,0,0,3,"2000,2026",,,0,False,False
+Delibera_7__5337_AttestazionePubblicazione_2.pdf,AttestazionePubblicazione,Regolamenti,,high,text,9ae22546321587ac0d52e7fafaecf86defea52e8c77e7199395fbbc29eed6df5,668,102,76,0,0,0,3,"2000,2026",,,0,False,False
+Delibera_3__5333_AttestazionePubblicazione_4.pdf,AttestazionePubblicazione,Regolamenti,,high,text,751842d795a7083ce3027165e3ae3186ff3156686e9743957b3ac9730c03e608,674,102,76,0,0,0,3,"2000,2026",,,0,False,False
+Delibera_60__5549_AttestazionePubblicazione_3.pdf,AttestazionePubblicazione,Pubblicazione e Trasparenza,,high,text,ba4fbc341dfa61f0f82a193919177a0f1f0a2a955cad05c71dd67e5fc521ec4f,662,103,77,0,0,0,3,"2000,2026",,,0,False,False
+Delibera_8__5338_AttestazionePubblicazione_3.pdf,AttestazionePubblicazione,Regolamenti,,high,text,6d38b9b5b34406e631793a6463aa84e6fb67e350c42fa45dc76c7774cdf1a894,655,104,76,0,0,0,3,"2000,2026,2028",,,0,False,False
+Delibera_55__5537_AttestazionePubblicazione_2.pdf,AttestazionePubblicazione,Pubblicazione e Trasparenza,,ml_predicted,text,e52bee58f2ed6c5219488385088539d3de3d3d5bd9f725ed2b94972e66801924,695,105,80,0,0,0,3,"2000,2026",,,0,False,False

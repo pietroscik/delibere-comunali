@@ -1,0 +1,12 @@
+[workspace]
+restore_data_on_startup = True
+save_data_on_exit = True
+save_history = True
+save_non_project_files = False
+project_type = 'empty-project-type'
+recent_files = ['albo_scraper.py', 'new_albo_scraper.py', 'analyze_albo.py', '..\\..\\..\\OneDrive\\Desktop\\challenge fintec\\03_PROJECT_CODE\\src\\gen_v3_evolutionary_genetic.py']
+
+[main]
+version = 0.2.0
+recent_files = []
+
