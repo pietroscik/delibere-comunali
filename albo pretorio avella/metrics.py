@@ -80,7 +80,7 @@ class MetricsCollector:
         self.output_path = output_path or get_config().output_dir / "metrics"
         self.output_path.mkdir(parents=True, exist_ok=True)
         
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self._metric_points: List[MetricPoint] = []
         self._operations: List[OperationMetrics] = []
         self._counters: Dict[str, int] = {}
@@ -94,6 +94,18 @@ class MetricsCollector:
         point = MetricPoint(name=name, value=value, tags=tags or {})
         self._metric_points.append(point)
         self.logger.debug(f"Recorded metric: {name}={value}")
+
+    def _increment_counter_internal(
+        self,
+        name: str,
+        value: int = 1,
+        tags: Optional[Dict[str, str]] = None,
+    ) -> int:
+        """Increment counter without acquiring lock (caller must hold lock)."""
+        key = f"{name}:{json.dumps(tags, sort_keys=True)}" if tags else name
+        self._counters[key] = self._counters.get(key, 0) + value
+        self._record_point_internal(f"counter.{name}", self._counters[key], tags)
+        return self._counters[key]
     
     def record_point(self, name: str, value: float, tags: Optional[Dict[str, str]] = None):
         """Record a single metric data point."""
@@ -102,10 +114,8 @@ class MetricsCollector:
     
     def increment_counter(self, name: str, value: int = 1, tags: Optional[Dict[str, str]] = None):
         """Increment a counter metric."""
-        key = f"{name}:{json.dumps(tags, sort_keys=True)}" if tags else name
         with self._lock:
-            self._counters[key] = self._counters.get(key, 0) + value
-            self._record_point_internal(f"counter.{name}", self._counters[key], tags)
+            self._increment_counter_internal(name=name, value=value, tags=tags)
     
     def set_gauge(self, name: str, value: float, tags: Optional[Dict[str, str]] = None):
         """Set a gauge metric."""
@@ -125,21 +135,21 @@ class MetricsCollector:
             
             # Update counters
             if metrics.success:
-                self.increment_counter("operations.success")
+                self._increment_counter_internal("operations.success")
             else:
-                self.increment_counter("operations.failure")
+                self._increment_counter_internal("operations.failure")
             
-            self.increment_counter("operations.total")
+            self._increment_counter_internal("operations.total")
             
             # Record timing metrics
             if metrics.duration is not None:
-                self.record_point(
+                self._record_point_internal(
                     f"operation.duration.{metrics.operation_name}",
                     metrics.duration
                 )
             
             if metrics.throughput is not None:
-                self.record_point(
+                self._record_point_internal(
                     f"operation.throughput.{metrics.operation_name}",
                     metrics.throughput
                 )
@@ -149,45 +159,47 @@ class MetricsCollector:
                 extra=metrics.to_dict()
             )
     
+    def _build_summary_locked(self) -> Dict[str, Any]:
+        """Build summary assuming lock is already held."""
+        session_duration = time.time() - self.session_start
+
+        op_stats = {}
+        for op in self._operations:
+            name = op.operation_name
+            if name not in op_stats:
+                op_stats[name] = {
+                    "count": 0,
+                    "total_duration": 0,
+                    "successes": 0,
+                    "failures": 0,
+                }
+
+            op_stats[name]["count"] += 1
+            if op.duration is not None:
+                op_stats[name]["total_duration"] += op.duration
+            if op.success:
+                op_stats[name]["successes"] += 1
+            else:
+                op_stats[name]["failures"] += 1
+
+        for _, stats in op_stats.items():
+            if stats["count"] > 0:
+                stats["avg_duration"] = stats["total_duration"] / stats["count"]
+                stats["success_rate"] = stats["successes"] / stats["count"]
+
+        return {
+            "session_duration": session_duration,
+            "total_operations": len(self._operations),
+            "total_metric_points": len(self._metric_points),
+            "counters": dict(self._counters),
+            "gauges": dict(self._gauges),
+            "operation_statistics": op_stats,
+        }
+
     def get_summary(self) -> Dict[str, Any]:
         """Get a summary of all collected metrics."""
         with self._lock:
-            session_duration = time.time() - self.session_start
-            
-            # Calculate operation statistics
-            op_stats = {}
-            for op in self._operations:
-                name = op.operation_name
-                if name not in op_stats:
-                    op_stats[name] = {
-                        "count": 0,
-                        "total_duration": 0,
-                        "successes": 0,
-                        "failures": 0
-                    }
-                
-                op_stats[name]["count"] += 1
-                if op.duration is not None:
-                    op_stats[name]["total_duration"] += op.duration
-                if op.success:
-                    op_stats[name]["successes"] += 1
-                else:
-                    op_stats[name]["failures"] += 1
-            
-            # Calculate averages
-            for name, stats in op_stats.items():
-                if stats["count"] > 0:
-                    stats["avg_duration"] = stats["total_duration"] / stats["count"]
-                    stats["success_rate"] = stats["successes"] / stats["count"]
-            
-            return {
-                "session_duration": session_duration,
-                "total_operations": len(self._operations),
-                "total_metric_points": len(self._metric_points),
-                "counters": dict(self._counters),
-                "gauges": dict(self._gauges),
-                "operation_statistics": op_stats
-            }
+            return self._build_summary_locked()
     
     def export_to_file(self, filename: Optional[str] = None) -> Path:
         """Export metrics to a JSON file."""
@@ -201,7 +213,7 @@ class MetricsCollector:
             data = {
                 "exported_at": datetime.now().isoformat(),
                 "session_start": self.session_start,
-                "summary": self.get_summary(),
+                "summary": self._build_summary_locked(),
                 "recent_operations": [op.to_dict() for op in self._operations[-100:]],
                 "recent_points": [pt.to_dict() for pt in self._metric_points[-1000:]]
             }

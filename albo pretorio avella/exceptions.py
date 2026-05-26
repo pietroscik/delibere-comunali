@@ -293,9 +293,10 @@ def handle_exception(
     
     # If already an AlboPretorioError, log and optionally re-raise
     if isinstance(exception, AlboPretorioError):
+        log_extra = {"albo_error": exception.to_dict()}
         logger.error(
             f"{exception.__class__.__name__}: {exception.message}",
-            extra=exception.to_dict(),
+            extra=log_extra,
             exc_info=True
         )
         if reraise:
@@ -311,9 +312,10 @@ def handle_exception(
         original_exception=exception
     )
     
+    log_extra = {"albo_error": wrapped_exception.to_dict()}
     logger.error(
         f"{wrapped_exception.__class__.__name__}: {wrapped_exception.message}",
-        extra=wrapped_exception.to_dict(),
+        extra=log_extra,
         exc_info=True
     )
     

@@ -7,6 +7,7 @@ Tests configuration, logging, exceptions, caching, and metrics modules.
 import pytest
 import time
 import json
+import os
 from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 import tempfile
@@ -59,7 +60,6 @@ class TestConfig:
     def test_llm_config_from_env(self):
         """Test LLM configuration loading from environment."""
         from config import LLMConfig
-        import os
         
         # Save original value
         original = os.environ.get('GOOGLE_API_KEY')
@@ -74,6 +74,42 @@ class TestConfig:
                 os.environ['GOOGLE_API_KEY'] = original
             else:
                 del os.environ['GOOGLE_API_KEY']
+
+    def test_app_config_load_from_env_overrides_nested_settings(self):
+        """Test nested settings override through environment variables."""
+        from config import AppConfig
+
+        with patch.dict(
+            os.environ,
+            {
+                "SCRAPER_DELAY": "2.5",
+                "LOG_LEVEL": "DEBUG",
+                "RAG_TOP_K": "7",
+            },
+            clear=False,
+        ):
+            config = AppConfig.load_from_env()
+            assert config.scraper.delay == 2.5
+            assert config.logging.level == "DEBUG"
+            assert config.rag.top_k == 7
+
+    def test_llm_priority_list_accepts_csv_env(self):
+        """Test comma-separated env parsing for LLM priority lists."""
+        from config import AppConfig
+
+        with patch.dict(
+            os.environ,
+            {
+                "GOOGLE_LLM_MODEL_PRIORITY": "gemini-a, gemini-b",
+                "GOOGLE_EMBEDDING_MODEL_PRIORITY": "models/x,models/y",
+                "RAG_USE_GEMINI_BY_DEFAULT": "true",
+            },
+            clear=False,
+        ):
+            config = AppConfig.load_from_env()
+            assert config.llm.model_priority == ["gemini-a", "gemini-b"]
+            assert config.llm.embedding_model_priority == ["models/x", "models/y"]
+            assert config.llm.use_gemini_by_default is True
     
     def test_rag_config_validation(self):
         """Test RAG configuration validation."""

@@ -26,9 +26,14 @@ class CustomFormatter(logging.Formatter):
     RESET = '\033[0m'
     
     def format(self, record):
-        log_color = self.COLORS.get(record.levelname, self.RESET)
-        record.levelname = f"{log_color}{record.levelname}{self.RESET}"
-        return super().format(record)
+        # Avoid mutating levelname for downstream handlers (e.g. file logging).
+        original_level = record.levelname
+        log_color = self.COLORS.get(original_level, self.RESET)
+        record.levelname = f"{log_color}{original_level}{self.RESET}"
+        try:
+            return super().format(record)
+        finally:
+            record.levelname = original_level
 
 
 def setup_logging(
@@ -78,10 +83,12 @@ def setup_logging(
             maxBytes=config.max_file_size,
             backupCount=config.backup_count
         )
-        file_handler.setLevel(logging.DEBUG)
-        file_formatter = logging.Formatter(config.format)
-        file_handler.setFormatter(file_formatter)
-        logger.addHandler(file_handler)
+        # In tests this class can be patched/mocked; add only valid handlers.
+        if isinstance(file_handler, logging.Handler):
+            file_handler.setLevel(logging.DEBUG)
+            file_formatter = logging.Formatter(config.format)
+            file_handler.setFormatter(file_formatter)
+            logger.addHandler(file_handler)
     
     return logger
 
@@ -97,11 +104,12 @@ def get_logger(name: str = __name__) -> logging.Logger:
         Logger instance
     """
     logger = logging.getLogger(f'albo_pretorio.{name}')
-    
-    # If no handlers, set up default logging
-    if not logger.handlers:
+
+    # Configure base logger once; child loggers normally do not own handlers.
+    base_logger = logging.getLogger("albo_pretorio")
+    if not base_logger.handlers:
         setup_logging()
-    
+
     return logger
 
 

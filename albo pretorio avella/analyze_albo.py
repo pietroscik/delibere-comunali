@@ -509,7 +509,11 @@ def extract_from_pdf(path: Path, use_llm: bool = False, rf_model=None) -> dict:
             amts.append(m.group(1))
     # (opzionale) cattura importi SENZA simbolo € quando preceduti da parole chiave
     
-    amts_norm = [normalize_amount(a) for a in amts if normalize_amount(a) is not None]
+    amts_norm = []
+    for amount_raw in amts:
+        normalized = normalize_amount(amount_raw)
+        if normalized is not None:
+            amts_norm.append(normalized)
     out["importi_raw"] = amts
     out["importo_max"] = max(amts_norm) if amts_norm else None
     out["importo_sum"] = sum(amts_norm) if amts_norm else None

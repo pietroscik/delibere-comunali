@@ -2,20 +2,19 @@ import streamlit as st
 import pandas as pd
 import os
 import json
+from pathlib import Path
 
-# Definisci il percorso base per i dati
-# Assicurati che questa variabile punti alla directory 'albo_download' del tuo progetto.
-# Ad esempio, se 'online_comprehension_strategy.py' è nella stessa directory del README,
-# e 'albo_download' è una sottodirectory, il percorso è corretto.
-BASE_DIR = "./albo_download"
-TEXTS_DIR = os.path.join(BASE_DIR, "texts")
+# Percorsi dati robusti rispetto alla cartella corrente di esecuzione.
+SCRIPT_DIR = Path(__file__).resolve().parent
+BASE_DIR = SCRIPT_DIR / "albo_download"
+TEXTS_DIR = BASE_DIR / "texts"
 
 # --- Funzioni di Supporto ---
 @st.cache_data
 def load_data(file_name):
     """Carica un file CSV dalla directory base."""
-    path = os.path.join(BASE_DIR, file_name)
-    if os.path.exists(path):
+    path = BASE_DIR / file_name
+    if path.exists():
         try:
             return pd.read_csv(path)
         except Exception as e:
@@ -26,8 +25,8 @@ def load_data(file_name):
 @st.cache_data
 def load_jsonl(file_name):
     """Carica un file JSONL dalla directory base."""
-    path = os.path.join(BASE_DIR, file_name)
-    if os.path.exists(path):
+    path = BASE_DIR / file_name
+    if path.exists():
         data = []
         try:
             with open(path, 'r', encoding='utf-8') as f:
@@ -42,8 +41,8 @@ def load_jsonl(file_name):
 def get_raw_text(file_id):
     """Recupera il contenuto testuale grezzo per un dato file_id."""
     # Si assume che file_id corrisponda al nome base del file .txt
-    text_path = os.path.join(TEXTS_DIR, f"{file_id}.txt")
-    if os.path.exists(text_path):
+    text_path = TEXTS_DIR / f"{file_id}.txt"
+    if text_path.exists():
         try:
             with open(text_path, 'r', encoding='utf-8') as f:
                 return f.read()
@@ -183,7 +182,7 @@ elif page == "Strategia di Comprensione":
     st.latex(r"""
     \text{transizione} = (q_s, i, o, q_t)
     """)
-    st.markdown("""
+    st.markdown(r"""
     Dove:
     - \(q_s\): stato di partenza
     - \(i\): carattere o token di input (es. un'abbreviazione burocratica)
@@ -215,7 +214,7 @@ elif page == "Strategia di Comprensione":
     st.latex(r"""
     \text{TF-IDF}(t, d, D) = \text{TF}(t, d) \times \text{IDF}(t, D)
     """)
-    st.markdown("""
+    st.markdown(r"""
     Dove:
     - \(\text{TF}(t, d)\): frequenza del termine \(t\) nel documento \(d\).
     - \(\text{IDF}(t, D)\): logaritmo inverso della frequenza del documento per il termine \(t\) nell'intero corpus \(D\).

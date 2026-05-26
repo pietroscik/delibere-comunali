@@ -91,6 +91,8 @@ Codici uscita `validate_output.py`:
 python3 run_pipeline.py
 # variante veloce senza training ML
 python3 run_pipeline.py --skip-ml
+# includi pulizia testi (boilerplate) prima della validazione
+python3 run_pipeline.py --clean-texts
 # validazione strict (warning bloccanti)
 python3 run_pipeline.py --strict-validation
 ```
@@ -100,7 +102,8 @@ Flusso `run_pipeline.py`:
 1. `analyze_albo.py`
 2. (se non `--skip-ml`) `albo_download/randomForest.py`
 3. (se non `--skip-ml`) `analyze_albo.py` secondo pass con modello
-4. `validate_output.py` (con `--fail-on-warning` se `--strict-validation`)
+4. (se `--clean-texts`) `clean_texts.py`
+5. `validate_output.py` (con `--fail-on-warning` se `--strict-validation`)
 
 ### 4) Dashboard e RAG
 
@@ -169,7 +172,9 @@ GOOGLE_EMBEDDING_MODEL_PRIORITY=models/gemini-embedding-001,models/text-embeddin
 
 ## Pubblicazione Git
 
-Il repository include un `.gitignore` che esclude venv, output locali e segreti.
+Il repository include un `.gitignore` che esclude venv e segreti.
+La cartella `albo_download/` e' mantenuta versionata intenzionalmente per
+analizzare e validare la qualita' degli output nel tempo.
 Per sicurezza:
 
 1. usa sempre `.env` locale (mai committarlo),
@@ -180,6 +185,7 @@ Per sicurezza:
 
 ```bash
 python3 -m unittest discover -s tests -p "test_*.py"
+python3 -m pytest -q
 python3 -m py_compile *.py
 ```
 
