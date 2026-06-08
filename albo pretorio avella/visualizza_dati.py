@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from pathlib import Path
+import json
 
 # Configurazione della pagina
 st.set_page_config(page_title="Validazione Albo AI", layout="wide", page_icon="📊")
@@ -29,6 +30,10 @@ col2.metric("Documenti con CIG", df['cig'].notna().sum())
 col3.metric("Documenti con Importo", df['importo_max'].notna().sum())
 col4.metric("Documenti con Beneficiario", df['beneficiario'].notna().sum())
 
+anomalies_count = df['anomalie'].notna().sum() if 'anomalie' in df.columns else 0
+if anomalies_count > 0:
+    st.warning(f"⚠️ Attenzione: Sono stati rilevati {anomalies_count} documenti con anomalie strutturali (Errori Checksum P.IVA/IBAN o discrepanze).")
+
 st.divider()
 
 # --- SEZIONE TABELLA INTERATTIVA ---
@@ -36,7 +41,7 @@ st.subheader("🗂️ Vista Tabellare Globale")
 st.markdown("Puoi ordinare le colonne cliccando sulle intestazioni, oppure cercare un valore specifico usando l'icona della lente d'ingrandimento sulla tabella.")
 
 # Selezioniamo solo le colonne più utili per la validazione umana
-cols_to_show = ['pdf_name', 'doc_type', 'oggetto', 'cig', 'cup', 'importo_max', 'beneficiario', 'responsabile']
+cols_to_show = ['pdf_name', 'doc_type', 'oggetto', 'cig', 'importo_max', 'piva_beneficiario', 'iban', 'anomalie']
 available_cols = [c for c in cols_to_show if c in df.columns]
 
 st.dataframe(df[available_cols], use_container_width=True, hide_index=True)
@@ -59,9 +64,25 @@ if selected_pdf:
             "CIG": doc_data.get('cig'),
             "CUP": doc_data.get('cup'),
             "Importo Massimo": f"€ {doc_data.get('importo_max')}" if pd.notna(doc_data.get('importo_max')) else "Nessuno",
+            "Importo Lettere (Rilevato)": doc_data.get('importo_lettere'),
             "Beneficiario": doc_data.get('beneficiario'),
-            "Responsabile": doc_data.get('responsabile')
+            "P.IVA Beneficiario": doc_data.get('piva_beneficiario'),
+            "IBAN": doc_data.get('iban'),
+            "Codice Appalti": doc_data.get('codice_appalti'),
+            "Responsabile": doc_data.get('responsabile'),
         })
+        
+        if 'anomalie' in doc_data and pd.notna(doc_data['anomalie']):
+            st.error(f"**Anomalie Rilevate (Feedback Loop):** {doc_data['anomalie']}")
+        
+        if 'quadro_economico' in doc_data and pd.notna(doc_data['quadro_economico']):
+            st.info("**Quadro Economico Estratto (Gemini Vision)**")
+            try:
+                quadro_json = json.loads(doc_data['quadro_economico'])
+                st.table(pd.DataFrame(quadro_json))
+            except Exception:
+                st.write(doc_data['quadro_economico'])
+                
     with c2:
         st.info("**Testo Originale Letto dal Parser (Prime 1200 battute)**")
         st.text(doc_data.get('text_preview', 'Testo non disponibile'))

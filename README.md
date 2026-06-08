@@ -15,8 +15,9 @@ Flusso consigliato end-to-end:
 1. `albo_scraper.py` -> scarica metadati + allegati in `albo_download/`.
 2. `analyze_albo.py` -> estrae testo/campi e crea dataset analitici.
 3. `validate_output.py` -> controlli automatici su schema/qualita'.
-4. `explore_albo.py` -> report esplorativi e priorita' operative.
-5. `rag_app.py` / `visualizza_dati.py` -> consultazione interattiva.
+4. `verify_output.py` -> verifica approfondita su Excel e file estratti.
+5. `explore_albo.py` -> report esplorativi e priorita' operative.
+6. `rag_app.py` / `visualizza_dati.py` -> consultazione interattiva.
 
 ## Installazione
 
@@ -55,6 +56,7 @@ Esegui un ciclo base completo:
 python3 albo_scraper.py --page-from 1 --page-to 20 --out ./albo_download --delay 1.5
 python3 analyze_albo.py --base ./albo_download
 python3 validate_output.py --base ./albo_download
+python3 verify_output.py --excel ./albo_download/albo_analisi.xlsx
 python3 explore_albo.py --base ./albo_download
 ```
 
@@ -73,7 +75,9 @@ python3 albo_scraper.py --page-from 1 --page-to 80 --title-regex "bilancio|rendi
 
 ```bash
 python3 analyze_albo.py --base ./albo_download
-python3 verify_output.py --excel ./albo_download/albo_analisi.xlsx
+# (Opzionale) Usa Gemini per estrarre campi complessi e quadri economici:
+python3 analyze_albo.py --base ./albo_download --use-llm
+
 python3 validate_output.py --base ./albo_download
 # strict mode (warning bloccanti)
 python3 validate_output.py --base ./albo_download --fail-on-warning
@@ -104,6 +108,7 @@ Flusso `run_pipeline.py`:
 3. (se non `--skip-ml`) `analyze_albo.py` secondo pass con modello
 4. (se `--clean-texts`) `clean_texts.py`
 5. `validate_output.py` (con `--fail-on-warning` se `--strict-validation`)
+6. `verify_output.py` (verifica automatica dell'Excel generato)
 
 ### 4) Dashboard e RAG
 
@@ -116,15 +121,15 @@ python3 -m streamlit run rag_app.py
 
 - `albo_download/albo_metadati.csv`: metadati scraping.
 - `albo_download/allegati_parsed.csv`: estrazioni per documento.
-- `albo_download/documenti_features.csv`: feature analitiche.
-- `albo_download/documenti_corpus.jsonl`: corpus RAG/ML.
-- `albo_download/texts/*.txt`: testo normalizzato per file.
-- `albo_download/albo_analisi.xlsx`: output tabellare multi-sheet.
-- `albo_download/failed_extractions.csv`: file scartati/non validi.
-- `albo_download/report/*`: report prodotti da `explore_albo.py`.
+- `albo_download/atti_parsed.csv`: estrazioni raggruppate per atto (collassando allegati multipli).
+- `albo_download/documenti_features.csv`: feature estratte per il machine learning.
+- `albo_download/documenti_corpus.jsonl`: corpus RAG / Addestramento LLM in formato JSONL.
+- `albo_download/failed_extractions.csv`: tracking dei file falliti o con testi insufficienti.
+- `albo_download/texts/*.txt`: file di testo crudi testuali convertiti (nativi o OCR).
+- `albo_download/albo_analisi.xlsx`: output tabellare multi-sheet con KPI e dati pronti (fogli: `pdf_analisi`, `kpi_source`, `kpi_visto_contabile`, `kpi_doctype`, `features_ml`, `fornitori_top50`, `atti_estratti`, `metadati`, `revisione_ml`, `anomalie_da_addestrare`).
 
 **Nota sulla qualità del testo estratto:**
-I file in `texts/` e il campo `text` in `documenti_corpus.jsonl` contengono il testo estratto dai PDF. Questo testo include spesso boilerplate (intestazioni e piè di pagina ripetuti come `"COPIA Piazza Municipio..."`) e sezioni burocratiche standard a fine documento (es. `"PARERE DI REGOLARITÀ TECNICA"`, `"ATTESTAZIONE DI PUBBLICAZIONE"`). Per task di analisi NLP o RAG, è consigliabile pre-processare il testo per rimuovere queste parti ridondanti. Inoltre, l'analisi corrente non estrae sistematicamente tutti i dati strutturati presenti, come i codici **CIG** (Codice Identificativo Gara), che sono spesso visibili nel testo (es. `CIG: BA980C4973`).
+I file in `texts/` e il campo `text` in `documenti_corpus.jsonl` contengono il testo estratto dai PDF. Questo testo include spesso boilerplate (es. `"COPIA Piazza Municipio..."`) e sezioni burocratiche standard a fine documento. Per task di analisi NLP o RAG, è consigliabile eseguire la pipeline con l'opzione `--clean-texts`. Rispetto alle versioni precedenti, ora l'analisi **estrae sistematicamente** dati strutturati avanzati come **CIG**, **CUP**, **IBAN** e **Importi** tramite regex potenziate e chiamate opzionali a LLM (`--use-llm`).
 
 ## Ciclo di Ottimizzazione della Qualità
 
@@ -135,6 +140,8 @@ L'esecuzione di `explore_albo.py` produce un `report.md` con una sintesi dei pro
 3.  **Valida**: controlla manualmente un campione di documenti segnalati come ambigui o non categorizzati. Questi documenti sono candidati ideali per costruire un *validation set* per futuri modelli di classificazione.
 4.  **Addestra**: usa il corpus pulito e deduplicato (`documenti_corpus.jsonl`) per addestrare modelli ML o per alimentare il sistema RAG, solo dopo aver verificato la qualità dell'OCR e del testo.
 5.  **Ripeti**: confronta le percentuali e le distribuzioni nei report tra le varie iterazioni per misurare i miglioramenti.
+
+> **Suggerimento Performance:** `analyze_albo.py` utilizza un sistema di **caching automatico** (legge la cache da `allegati_parsed.csv`). Se riesegui lo script, eviterà di riprocessare o richiamare le API LLM sui PDF già analizzati, risparmiando molto tempo e token. Per forzare il ricalcolo completo, elimina o rinomina il file csv.
 
 ## RAG Quota-Aware
 
@@ -160,15 +167,14 @@ GOOGLE_EMBEDDING_MODEL_PRIORITY=models/gemini-embedding-001,models/text-embeddin
 
 ## Struttura File
 
-- `albo_scraper.py`: entry point scraping.
-- `new_albo_scraper.py`: implementazione scraping.
-- `analyze_albo.py`: parsing PDF, estrazione metadati e feature.
-- `validate_output.py`: quality gate dataset.
-- `explore_albo.py`: report esplorativi ricorsivi.
-- `run_pipeline.py`: orchestration analisi + ML.
-- `rag_app.py`: chatbot RAG locale/Gemini quota-aware.
-- `visualizza_dati.py`: dashboard Streamlit per validazione manuale.
-- `tests/`: test di regressione.
+**Moduli Core (Refactoring Architetturale):**
+- `config.py`: Configurazione tipizzata e validata tramite Pydantic.
+- `cache.py`: Sistema di caching LRU/File thread-safe per operazioni OCR/API.
+- `exceptions.py`: Gerarchia di eccezioni custom (`AlboPretorioError`, `ScraperError`, ecc.).
+- `logger.py` e `metrics.py`: Telemetria, performance logging e tracciamento operazioni.
+
+**Script Operativi:**
+- `tests/`: suite di test avanzata basata su Pytest (es. `test_core_modules.py`).
 
 ## Pubblicazione Git
 
@@ -184,8 +190,10 @@ Per sicurezza:
 ## Test Rapidi
 
 ```bash
-python3 -m unittest discover -s tests -p "test_*.py"
-python3 -m pytest -q
+# Esecuzione completa test suite sui core modules
+python3 -m pytest tests/test_core_modules.py -v
+
+# Syntax check base
 python3 -m py_compile *.py
 ```
 
@@ -216,3 +224,13 @@ echo "GOOGLE_EMBEDDING_MODEL=models/gemini-embedding-001" >> .env
 3. riduci `Batch embedding` e aumenta `Pausa batch embedding`,
 4. usa priorita' modello con fallback in `.env`,
 5. riprova dopo reset quota o aggiorna piano/billing.
+
+---
+
+## Supporto e Sviluppi Futuri
+
+Il progetto è in continua evoluzione per supportare in modo sempre più affidabile l'estrazione e l'analisi dei dati della Pubblica Amministrazione. 
+Se incontri problemi non coperti dalla sezione Troubleshooting, puoi:
+- Controllare i log generati in `albo_scraper.log` e nella console.
+- Rieseguire i controlli di validazione per capire se il problema è nei PDF di origine.
+- Aprire una *Issue* per discutere anomalie nelle estrazioni OCR o nel sistema RAG.

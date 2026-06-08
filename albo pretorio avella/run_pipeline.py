@@ -112,6 +112,10 @@ def main() -> None:
         validate_cmd.append("--fail-on-warning")
     run_step(validate_cmd, "Validate outputs", SCRIPT_DIR)
 
+    verify_cmd = [args.python, "verify_output.py", "--excel", str(base / "albo_analisi.xlsx")]
+    if (base / "albo_analisi.xlsx").exists():
+        run_step(verify_cmd, "Verify Excel outputs", SCRIPT_DIR)
+
     print("\nPipeline completed successfully.")
 
 

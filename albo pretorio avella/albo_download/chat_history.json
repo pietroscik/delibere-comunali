@@ -246,5 +246,133 @@
         }
       }
     ]
+  },
+  {
+    "role": "user",
+    "content": "determina 167, 166, 168 somma urgenga idrico"
+  },
+  {
+    "role": "assistant",
+    "content": "⚠️ **Attenzione: L'Intelligenza Artificiale (Gemini) non è attiva.**\n\nIl sistema sta funzionando come un semplice motore di ricerca testuale. Per ottenere risposte ragionate dall'AI, inserisci la tua `GOOGLE_API_KEY` nel file `.env` e attiva Gemini dal menu laterale.\n\n\n\n**Ecco i documenti che contengono le parole cercate:**\n\n1. [Fonte: atto___5321_ElencoElettoriAIREVotantiPerCo_1772627130_2.pdf]\n   . 92 - I - A - 1939 del Comune di AVELLA BANKSIDE - 2 WOOLTON MOUNT 2 LIVERPOOL - REGNO UNITO 153 1508 1469 4 / 195 D'ANNA ERICA LIVERPOOL - REGNO UNITO 19/01/1981 atto n. 5 - II - B - 1986 del Comune di AVELLA BANKSIDE - 2 WOOLTON MOUNT 2 LIVERPOOL - REGNO UNITO 154 1513 1474 4 / 197 D'ANNA GINO LIVERPOOL - REGNO UNIT...\n\n2. [Fonte: Delibera_1182011__5485_Stampa_elenco_analitico_residui_pas4139_4.pdf] [CIG: Z98312CD68] [CUP: J22E24000190004]\n   CIG: Z98312CD68. CUP: J22E24000190004. .314,79 0,00 0,00 5.314,79 DIVERSI 1.03.02.16.002 1188.12 2024 460 SPESE POSTALI PER INVIO FATTURE 7.000,00 5.073,42 0,00 1.926,58 DIVERSI 1.03.02.16.002 1188.12 2025 889 STAMPA IMBUSTAMENTO E POSTALIZZAZIONE DEL RUOLO IDRICO 2025 4.500,00 0,00 0,00 4.500,00 DIVERSI 1.03.02.16.002...\n\n3. [Fonte: Delibera_25__5230_Relazione_DUP_2026_401698_2.pdf]\n   . I trasferimenti di residenza sono riportati come iscritti e cancellati dall'Anagrafe del comune. Fra gli iscritti, sono evidenziati con colore diverso i trasferimenti di residenza da altri comuni, quelli dall'estero e quelli dovuti per altri motivi (ad esempio per rettifiche amministrative). pag. 12 La tabella seguen...\n\n4. [Fonte: Delibera_8__5338_Relazione_DUP_2026_2028_2.pdf]\n   . I trasferimenti di residenza sono riportati come iscritti e cancellati dall'Anagrafe del comune. Fra gli iscritti, sono evidenziati con colore diverso i trasferimenti di residenza da altri comuni, quelli dall'estero e quelli dovuti per altri motivi (ad esempio per rettifiche amministrative). pag. 12 La tabella seguen...\n\n5. [Fonte: Determinazione_168__5345_DeterminadiImpegno_Copia_168_2026_1.pdf] [CIG: BA9F67DF48]\n   Oggetto: Servizio di supporto specialistico alla predisposizione del Piano Economico Finanziario secondo il metodo tariffario rifiuti MTR-3 per il terzo periodo regolatorio 2026-2029 ed elaborazione delle tariffe tari —. CIG: BA9F67DF48. . Note: Avella (AV), 05/03/2026 Il Responsabile del Servizio f.to dott. Pasquale M...\n\n6. [Fonte: Determinazione_168__5345_DeterminadiImpegno_Copia_168_2026_1.pdf] [CIG: BA9F67DF48]\n   Oggetto: Servizio di supporto specialistico alla predisposizione del Piano Economico Finanziario secondo il metodo tariffario rifiuti MTR-3 per il terzo periodo regolatorio 2026-2029 ed elaborazione delle tariffe tari —. CIG: BA9F67DF48. .f. Esercizio N. Impegno Provvisorio 1.03.01.02.9 99 09.04 1188 999 - Altri beni e..."
+  },
+  {
+    "role": "user",
+    "content": "servizio idrico"
+  },
+  {
+    "role": "assistant",
+    "content": "⚠️ **Attenzione: L'Intelligenza Artificiale (Gemini) non è attiva.**\n\nIl sistema sta funzionando come un semplice motore di ricerca testuale. Per ottenere risposte ragionate dall'AI, inserisci la tua `GOOGLE_API_KEY` nel file `.env` e attiva Gemini dal menu laterale.\n\n\n\n**Ecco i documenti che contengono le parole cercate:**\n\n1. [Fonte: Delibera_1182011__5485_Stampa_elenco_analitico_residui_att4160_3.pdf]\n   .05.99.99.999 407 2023 22 ENERGIA ELETTRICA PERIODO MARZO-MAGGIO 379,90 0,00 0,00 379,90 COMUNE DI BAIANO 3.05.99.99.999 407 2023 46 rimborso energia periodo da giugno a dicembre 2023 dal comune di Sperone 610,00 0,00 0,00 610,00 COMUNE DI SPERONE 3.05.99.99.999 407 2023 47 energia elettrica periodo giugno diembre 2023...\n\n2. [Fonte: Delibera_1182011__5485_Stampa_elenco_analitico_residui_pas4139_4.pdf] [CIG: Z98312CD68] [CUP: J22E24000190004]\n   CIG: Z98312CD68. CUP: J22E24000190004. . 616,10 0,00 0,00 616,10 EUROPRINT 2000 S.R.L. 1.03.01.02.999 43 2025 808 Affidamento del servizio di manutenzione e/o sostituzione estintori collocati nei plessi scolastici e negli edifici comunali - D.P.R. 457 – Legge 626/1994. 251,72 0,00 -14,64 237,08 SMEAR di Antonio Picillo...\n\n3. [Fonte: Delibera_1182011__5485_Stampa_elenco_analitico_residui_pas4139_4.pdf] [CIG: Z98312CD68] [CUP: J22E24000190004]\n   CIG: Z98312CD68. CUP: J22E24000190004. .898,05 0,00 0,00 21.898,05 G.I.P.A. SRL 1.03.02.05.004 1188.9 2025 865 LIQUIDAZIONE FATTURE PER L’ENERGIA ELETTRICA– PROVVEDIMENTI 121.984,94 101.865,98 0,00 20.118,96 UNICA SPA 1.03.02.05.004 1188.10 2025 681 liquidazione fatture per energia elettrica 10.853,42 826,52 0,00 10.02...\n\n4. [Fonte: Delibera_1182011__5485_Stampa_elenco_analitico_residui_pas4139_4.pdf] [CIG: Z98312CD68] [CUP: J22E24000190004]\n   CIG: Z98312CD68. CUP: J22E24000190004. .03.02.15.999 154 2025 810 attività di consulenza per la partecipazione a bandi del PSR - Costituzione, Aggiornamento e Custodia del Fascicolo Aziendale del Comune di Avella 1.000,00 0,00 0,00 1.000,00 UCI DI AVELLINO 1.03.02.15.999 154 2025 1177 PRESTAZIONI E SERVIZI DELLA GESTIO...\n\n5. [Fonte: Delibera_1182011__5485_Stampa_elenco_analitico_residui_pas4139_4.pdf] [CIG: Z98312CD68] [CUP: J22E24000190004]\n   CIG: Z98312CD68. CUP: J22E24000190004. .314,79 0,00 0,00 5.314,79 DIVERSI 1.03.02.16.002 1188.12 2024 460 SPESE POSTALI PER INVIO FATTURE 7.000,00 5.073,42 0,00 1.926,58 DIVERSI 1.03.02.16.002 1188.12 2025 889 STAMPA IMBUSTAMENTO E POSTALIZZAZIONE DEL RUOLO IDRICO 2025 4.500,00 0,00 0,00 4.500,00 DIVERSI 1.03.02.16.002...\n\n6. [Fonte: Delibera_1182011__5485_Stampa_elenco_analitico_residui_pas4139_4.pdf] [CIG: Z98312CD68] [CUP: J22E24000190004]\n   CIG: Z98312CD68. CUP: J22E24000190004. .000,00 0,00 0,00 6.000,00 COOPERATIVA SOCIALE ECOVIGILANTES ONLUS 1.03.02.99.999 1097 2025 250 affidamento di durata biennale del servizio di manutenzione ordinaria e straordinaria del verde pubblico. Determina a contrarre 45.000,00 17.324,00 0,00 27.676,00 ARBUCCI VITO 1.03.02.9..."
+  },
+  {
+    "role": "user",
+    "content": "determine su idrico"
+  },
+  {
+    "role": "assistant",
+    "content": "Sulla base dei documenti forniti, sono presenti le seguenti determinazioni o atti di approvazione relativi al servizio idrico:\n\n*   **Determina UTC di approvazione ruolo N. 80/25** per i proventi del servizio idrico 2024.\n    [Fonte: Delibera_1182011__5485_Stampa_elenco_analitico_residui_att4160_3.pdf]\n*   **Approvazione ruolo UTC N. 80/25** per i proventi per fognatura 2024.\n    [Fonte: Delibera_1182011__5485_Stampa_elenco_analitico_residui_att4160_3.pdf]\n*   **Deliberazione di Consiglio Comunale N° 3 del 03.03.2026** avente ad oggetto \"APPROVAZIONE PIANO ECONOMICO FINANZIARIO IDRICO 2026\". Questa deliberazione è stata oggetto di integrazione.\n    [Fonte: Delibera_17__5423_AttestazionePubblicazione_2.pdf]\n*   **Delibera di Giunta n. 20 del 10/02/2026** avente ad oggetto \"SERVIZIO IDRICO INTEGRATO - APPROVAZIONE PIANO INDUSTRIALE E REGIME TARIFFARIO ANNO 2026. PROVVEDIMENTI.\"\n    [Fonte: Delibera_20__5222_AttestazionePubblicazione_2.pdf]\n\nInoltre, è menzionato un affidamento di servizio relativo al canone idrico:\n\n*   **Affidamento Servizio di emissione, avvisi di accertamento esecutivi per omesso/parziale versamento canone idrico su ruolo ordinario e connessa riscossione anche coattiva degli atti emessi e servizi accessori - anno 2022.**\n    CIG: B621693865\n    [Fonte: Delibera_1182011__5485_Stampa_elenco_analitico_residui_pas4139_4.pdf]"
+  },
+  {
+    "role": "user",
+    "content": "trova Determine di somma urgenza per la rete idrica (n. 166, 167 e 168 del 2026),"
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "Le informazioni relative alle determine di somma urgenza n. 166, 167 e 168 del 2026 non sono presenti nei documenti forniti.\n\nIl contesto a disposizione contiene esclusivamente la determinazione n. 81 del 02/02/2026, avente per oggetto \"Approvazione affidamento nella procedura di urgenza, la immediata esecuzione dei lavori di salpaggio, pulizia del pozzo e sostituzione della elettropompa guasta\" (CIG: B9D1D1E5B8).\n\n[Fonte: Determinazione_81__5184_DeterminadiLiquidazione_Copia_81_2026_1.pdf]",
+        "extras": {
+          "signature": "EjQKMgEMOdbHF8JG5rjX2LJ/Cn5JgJpNPS7zL9UCCsT8/ieFqjx0n6T67Waq3ifPB2toxaH/"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": "Determine di somma urgenza per la rete idrica"
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "In merito ai lavori di somma urgenza per la rete idrica, è stata emessa la **Determinazione n. 81 del 02/02/2026**, avente ad oggetto l'affidamento e la liquidazione per l'immediata esecuzione dei lavori di salpaggio, pulizia del pozzo e sostituzione dell'elettropompa guasta presso il pozzo \"consortile\" in località Fusaro.\n\nL'intervento è stato affidato all'operatore economico **PROCOGEM s.r.l.s.** per un importo complessivo di **€ 22.000,00** (di cui € 20.000,00 per imponibile ed € 2.000,00 per IVA al 10%). L'atto prevede inoltre la richiesta di rimborso di una quota parte della spesa ai Comuni di Baiano (24%, pari a € 7.392,00) e Sperone (16%, pari a € 1.408,00).\n\n[Fonte: Determinazione_81__5184_DeterminadiLiquidazione_Copia_81_2026_1.pdf]\nCIG: B9D1D1E5B8",
+        "extras": {
+          "signature": "EjQKMgEMOdbHcM8Z30vS25o8eXKRArn08MsUg2QUfr6bMLE0wg9x4JoRrBmjEc7M0Tpr+rPX"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": "riparazioni condotta idrica"
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "Gli interventi di riparazione e manutenzione della rete idrica e fognaria nel Comune di Avella sono oggetto di diverse attività programmate e in corso:\n\n*   **Interventi di manutenzione straordinaria:** È prevista la manutenzione dei bottini idrici (ristrutturazione, opere murarie, tinteggiatura e recinzione), la manutenzione del \"deposito di carico\" in località Capo di Ciesco (riparazione perdite, impermeabilizzazione, impianto di clorazione) e del deposito di accumulo in \"località Fusaro\" (riparazione perdite dal fondo e dalle pareti, impermeabilizzazione, adeguamento impianto di clorazione). Sono inoltre previsti rifacimenti di tratti di rete (Via Duca Capece Galeota, Via Scandone, Via Campo), nuovi tratti (Via Tombe Romane, Via Cupa dei Funari, sorgente Sant’Egidio) e il potenziamento di tratti nel centro urbano e lungo la Via Nazionale delle Puglie [Fonte: Delibera_20__allegato1770900611_3.pdf; Delibera_3__5333_PIANO_INDUSTRIALE_ACQUA_2026_2.pdf].\n*   **Programmazione triennale:** Il Programma Triennale 2026-2028 include l'intervento \"SRV2024/00013\" relativo alla manutenzione ordinaria e straordinaria della rete idrica e fognaria, con riparazione delle perdite [Fonte: Delibera_24__5229_Progr_TriennaleRaggr_400580_2.pdf; Delibera_6__5336_SF_Progr_Triennale_420026_2.pdf].\n*   **Affidamento lavori:** È stata emessa la determina n. 727 del 16/12/2025 per i \"Lavori di riparazione e sostituzione di alcuni tratti della rete idrica e fognaria sul territorio comunale\", affidati a Sanseverino Francesco per un importo di € 15.917,00 [Fonte: Determinazione_727__4988_DeterminadiImpegno_Copia_727_2025_1.pdf; Determinazione_727__4988_VistoContabile_2.pdf].\n\n**Codice CIG:** B97B48C055\n**Codice CUP:** Non presente nei documenti.",
+        "extras": {
+          "signature": "EjQKMgEMOdbH5d7ryw48YxxhMj4VV2uObLT58SiWqW1ssGZh+wgeduhv7eJrhafjrVHX0c2c"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": " Affidamento lavori riparazioni condotta idrica"
+  },
+  {
+    "role": "assistant",
+    "content": "L'affidamento dei lavori di riparazione e sostituzione di alcuni tratti della rete idrica e fognaria sul territorio comunale è stato effettuato con CIG: B97B48C055. L'importo dell'impegno è di € 15.917,00. Il creditore è SANSEVERINO FRANCESCO. [Fonte: Determinazione_727__4988_DeterminadiImpegno_Copia_727_2025_1.pdf]\n\nInoltre, è presente un impegno per \"DETERMINA A CONTRARRE PER INCARICO DI MANUTENZIONE RETE IDRICA SUL TERRITORIO COMUNALE\" con un importo di € 25.000,00, di cui € 4.000,00 sono stati impegnati e € 5.700,00 sono da conservare. [Fonte: Delibera_1182011__5485_Stampa_elenco_analitico_residui_pas4139_4.pdf]\n\nInfine, si menziona un impegno per \"IQUALIFICAZIONE RETE IDRICA LOTTO I- REALIZZAZIONE SISTEMA DI CONTABILIZZAZIONE, TELEGESTIONE E CONTROLLO DELLA RETE IDRICA COMUNALE\" con un importo di € 630.525,00. [Fonte: Delibera_1182011__5485_Stampa_elenco_analitico_rettifiche_4140_6.pdf]"
+  },
+  {
+    "role": "user",
+    "content": "affidamenti SANSEVERINO FRANCESCO"
+  },
+  {
+    "role": "assistant",
+    "content": "Sanseverino Francesco, titolare della ditta CLIMANOVA, è stato affidatario dei seguenti lavori:\n\n*   Lavori di manutenzione, prima accensione caldaie plessi scolastici per un importo di € 4.000,00 IVA compresa. [Fonte: Determinazione_721__4985_DeterminadiImpegno_Copia_721_2025_1.pdf] [CIG: B92AD4A8F6]\n*   Lavori di riparazione e sostituzione di alcuni tratti della rete idrica e fognaria sul territorio comunale per un importo di € 14.470,00 oltre IVA al 10%. [Fonte: Determinazione_727__4988_DeterminadiImpegno_Copia_727_2025_1.pdf] [CIG: B97B48C055]\n*   Lavori di riparazione e sostituzione di alcuni tratti della rete idrica e fognaria sul territorio comunale per un importo di € 14.470,00 oltre IVA al 10%. [Fonte: Determinazione_747__5019_DeterminadiLiquidazione_Copia_747_2025_1.pdf] [CIG: B97B48C055]"
+  },
+  {
+    "role": "user",
+    "content": "cosa risulta CLIMANOVA?"
+  },
+  {
+    "role": "assistant",
+    "content": "Le informazioni su \"CLIMANOVA\" non sono presenti nei documenti forniti."
+  },
+  {
+    "role": "user",
+    "content": "che affidamenti a CLIMANOVA"
+  },
+  {
+    "role": "assistant",
+    "content": "CLIMANOVA di Sanseverino Francesco è stata affidata per i \"Lavori di riparazione e sostituzione di alcuni tratti della rete idrica e fognaria sul territorio comunale\" per un importo di € 14.470,00 oltre IVA al 10%.\n[Fonte: Determinazione_727__4988_DeterminadiImpegno_Copia_727_2025_1.pdf] [CIG: B97B48C055]\n[Fonte: Determinazione_747__5019_DeterminadiLiquidazione_Copia_747_2025_1.pdf] [CIG: B97B48C055]"
+  },
+  {
+    "role": "user",
+    "content": "come mai a climanova esce una cosa e a sanseverino francesco ne esce un altro sugli affidamenti?"
+  },
+  {
+    "role": "assistant",
+    "content": "Le informazioni fornite non chiariscono il motivo per cui a \"Climanova\" e a \"Sanseverino Francesco\" escano cose diverse sugli affidamenti. I documenti menzionano \"CLIMANOVA di Sanseverino Francesco\" come operatore economico unico.\n\n[Fonte: Determinazione_727__4988_DeterminadiImpegno_Copia_727_2025_1.pdf]\n[Fonte: Determinazione_747__5019_DeterminadiLiquidazione_Copia_747_2025_1.pdf]"
+  },
+  {
+    "role": "user",
+    "content": "che affidamenti sono per sanseverino francesco"
+  },
+  {
+    "role": "assistant",
+    "content": "Per l'operatore economico \"CLIMANOVA di Sanseverino Francesco\", P.IVA: 02439560646, sono stati individuati i seguenti affidamenti:\n\n1.  **Oggetto:** Lavori di riparazione e sostituzione di alcuni tratti della rete idrica e fognaria sul territorio comunale.\n    *   **CIG:** B97B48C055\n    *   **CUP:** nan\n    *   **Fonte:** [Determinazione_727__4988_DeterminadiImpegno_Copia_727_2025_1.pdf], [Determinazione_747__5019_DeterminadiLiquidazione_Copia_747_2025_1.pdf]\n\n2.  **Oggetto:** Lavori di manutenzione, prima accensione caldaie plessi scolastici.\n    *   **CIG:** B92AD4A8F6\n    *   **CUP:** nan\n    *   **Fonte:** [Determinazione_721__4985_DeterminadiImpegno_Copia_721_2025_1.pdf]"
+  },
+  {
+    "role": "user",
+    "content": "i documenti sono corretti per il modello?"
+  },
+  {
+    "role": "assistant",
+    "content": "Le informazioni relative alla correttezza dei documenti per un \"modello\" specifico non sono presenti nei frammenti di testo forniti. I documenti fanno riferimento a normative e regolamenti che disciplinano il contenuto o la procedura degli atti (ad esempio, il Rendiconto di Gestione 2025 è approvato secondo il modello del DM Interno del 23 gennaio 2012, e la procedura di asta pubblica è conforme al Regolamento Comunale per l’Alienazione del Patrimonio), ma non valutano la correttezza del formato o della struttura dei documenti stessi rispetto a un modello predefinito per la loro redazione.\n\n[Fonte: Delibera_20__5667_DeliberadiConsiglio_Copia_20_2026_1.pdf] [CIG: nan] [CUP: nan]\n[Fonte: Determinazione_827__5637_DeterminaGenerica_Copia_350_2026_1.pdf] [CIG: nan] [CUP: nan]\n[Fonte: atto_20__5603_OrdinanzeSindacali_Copia_20_2026_1.pdf] [CIG: nan] [CUP: nan]\n[Fonte: atto_28__5689_OrdinanzeSindacali_Copia_21_2026_1.pdf] [CIG: nan] [CUP: nan]\n[Fonte: atto_3__5412_OrdinanzeDirigenziali_Copia_4_2026_1.pdf] [CIG: nan] [CUP: nan]\n[Fonte: atto_3__5501_OrdinanzeDirigenziali_Copia_8_2026_1.pdf] [CIG: nan] [CUP: nan]"
   }
 ]

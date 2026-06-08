@@ -205,9 +205,13 @@ class MetricsCollector:
         """Export metrics to a JSON file."""
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"metrics_{timestamp}.json"
-        
-        output_file = self.output_path / filename
+            output_file = self.output_path / f"metrics_{timestamp}.json"
+        else:
+            output_file = Path(filename)
+            if not output_file.is_absolute():
+                output_file = self.output_path / output_file
+                
+        output_file.parent.mkdir(parents=True, exist_ok=True)
         
         with self._lock:
             data = {

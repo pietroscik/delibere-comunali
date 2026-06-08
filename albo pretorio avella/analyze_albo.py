@@ -16,6 +16,7 @@ import os
 import ast
 import sys
 import shutil
+import time
 import subprocess
 from typing import Optional
 from pathlib import Path
@@ -26,6 +27,17 @@ import pypdfium2 as pdfium
 from dateutil import parser as dateparser
 import joblib
 from dotenv import load_dotenv
+
+from logger import get_logger
+from metrics import get_metrics_collector
+
+logger = get_logger("analyze_albo")
+metrics = get_metrics_collector()
+
+try:
+    from enhanced_extractor import DelibereExtractor
+except ImportError:
+    DelibereExtractor = None
 
 try:
     from System.Security.Cryptography.Pkcs import SignedCms, ContentInfo
@@ -45,11 +57,18 @@ try:
 except ModuleNotFoundError:
     genai = None
 
+# Inizializza l'estrattore avanzato globale
+advanced_extractor = DelibereExtractor() if DelibereExtractor else None
+
 # Configura Tesseract se su Windows leggendo il path dal .env se presente, altrimenti default
 if pytesseract and sys.platform == "win32":
     tesseract_path = os.getenv("TESSERACT_CMD", r"C:\Program Files\Tesseract-OCR\tesseract.exe")
     if os.path.exists(tesseract_path):
         pytesseract.pytesseract.tesseract_cmd = tesseract_path
+        # Imposta automaticamente TESSDATA_PREFIX se non esiste nell'ambiente
+        tessdata_path = os.path.join(os.path.dirname(tesseract_path), "tessdata")
+        if "TESSDATA_PREFIX" not in os.environ and os.path.exists(tessdata_path):
+            os.environ["TESSDATA_PREFIX"] = tessdata_path
 
 def extract_p7m_content(p7m_path: Path) -> Optional[bytes]:
     """Estrae il contenuto da un file .p7m usando le librerie .NET se disponibili."""
@@ -67,27 +86,31 @@ def extract_p7m_content(p7m_path: Path) -> Optional[bytes]:
                 return subprocess.check_output(["openssl", "smime", "-decrypt", "-in", str(p7m_path), "-inform", "DER", "-noverify"])
             except Exception:
                 pass
-        print(f"[WARN] Estrazione .p7m fallita per {p7m_path.name}: {e}")
+        logger.warning(f"Estrazione .p7m fallita per {p7m_path.name}: {e}")
         return None
 
 # --- Extractor usando pypdfium2 ---
-def extract_text_pdf(path_str: str) -> str:
+def extract_text_pdf(pdf_input) -> str:
     """Estrae testo da PDF usando pypdfium2"""
     try:
-        pdf = pdfium.PdfDocument(path_str)
+        pdf = pdfium.PdfDocument(pdf_input)
         text_parts = []
         for page in pdf:
             textpage = page.get_textpage()
-            text = textpage.get_text_range()
+            text = textpage.get_text_bounded()
             text_parts.append(text)
         return "\n".join(text_parts)
     except Exception as e:
-        print(f"[ERROR] Estrazione testo nativo fallita per {path_str}: {e}")
+        logger.error(f"Estrazione testo nativo fallita: {e}")
         return ""
 
 
-def _render_pdfium_images(path, dpi=300, max_pages=None):
-    pdf = pdfium.PdfDocument(str(path))
+def _render_pdfium_images(pdf_input, dpi=300, max_pages=None):
+    try:
+        pdf = pdfium.PdfDocument(pdf_input)
+    except Exception as e:
+        logger.error(f"Render PDF fallito: {e}")
+        return
     n = len(pdf)
     last = n if max_pages is None else min(n, max_pages)
     scale = dpi / 72.0
@@ -103,35 +126,42 @@ def _enhance_image_for_ocr(img):
     img = ImageEnhance.Contrast(img).enhance(2.0)
     return img
 
-def ocr_pdf_probe(path: Path, dpi=300, pages=(1,2)):
+def ocr_pdf_probe(pdf_input, dpi=300, pages=(1,2)):
     if pytesseract is None:
         return "", False
     txt = []
     try:
-        pdf = pdfium.PdfDocument(str(path))
+        pdf = pdfium.PdfDocument(pdf_input)
         scale = dpi / 72.0
         for i in range(min(len(pdf), pages[-1])):
             page = pdf[i]
             bitmap = page.render(scale=scale, rotation=0)
             img = _enhance_image_for_ocr(bitmap.to_pil())
-            txt.append(pytesseract.image_to_string(img, lang="ita", config="--psm 4"))
+            try:
+                txt.append(pytesseract.image_to_string(img, lang="ita", config="--psm 4"))
+            except pytesseract.TesseractError:
+                # Fallback alla lingua inglese (di default sempre presente) se manca l'italiano
+                txt.append(pytesseract.image_to_string(img, lang="eng", config="--psm 4"))
     except Exception as e:
-        print(f"[ERROR] Prova OCR fallita per {path}: {e}")
+        logger.error(f"Prova OCR fallita: {e}")
         return "", False
     text = " ".join(" ".join(txt).split())
     good = any(k in text.lower() for k in ["€","euro","cig","cup","impegno","liquidazione","corrispettivo","spesa"])
     return text, good
 
-def ocr_pdf_full(path: Path, dpi=300, max_pages=None):
+def ocr_pdf_full(pdf_input, dpi=300, max_pages=None):
     if pytesseract is None:
         return ""
     parts = []
     try:
-        for img in _render_pdfium_images(path, dpi=dpi, max_pages=max_pages):
+        for img in _render_pdfium_images(pdf_input, dpi=dpi, max_pages=max_pages):
             img = _enhance_image_for_ocr(img)
-            parts.append(pytesseract.image_to_string(img, lang="ita", config="--psm 4"))
+            try:
+                parts.append(pytesseract.image_to_string(img, lang="ita", config="--psm 4"))
+            except pytesseract.TesseractError:
+                parts.append(pytesseract.image_to_string(img, lang="eng", config="--psm 4"))
     except Exception as e:
-        print(f"[ERROR] OCR completo fallito per {path}: {e}")
+        logger.error(f"OCR completo fallito: {e}")
         return ""
     return " ".join(" ".join(parts).split())
 
@@ -152,8 +182,8 @@ RX_EURO_FALLBACK = r'euro\s*([\d\.,]+)'
 RX_AMOUNT_LOOSE = r'(?:importo|totale|spesa complessiva|impegno di spesa|per\s+un\s+importo\s+di)\s+€?\s*([\d\.,]+)'
 
 # Regex per CIG e CUP (Migliorate per intercettare C.I.G., spaziature, ecc.)
-RX_CIG = r'\bC\.?I\.?G\.?[\s:\-]*([A-Z0-9]{10})\b'
-RX_CUP = r'\bC\.?U\.?P\.?[\s:\-]*([A-Z0-9]{15})\b'
+RX_CIG = r'\bC\.?I\.?G\.?(?:\s*(?:n\.|numero|codice)?\s*[:\-]?\s*)([A-Z0-9]{10})\b'
+RX_CUP = r'\bC\.?U\.?P\.?(?:\s*(?:n\.|numero|codice)?\s*[:\-]?\s*)([A-Z0-9]{15})\b'
 
 # Regex per dati specifici dell'atto
 RX_OGGETTO = r'OGGETTO:\s*(.+?)(?=\s+(?:Registro\s+Generale\b|L[\'’\s]anno\b|CIG\s*[:\-]|CUP\s*[:\-]|Premess[oa]\b|Vist[oi]\s*(?::|il\b|la\b|i\b|le\b|che\b|l[\'’])|Considerat[oa]\b|Richiamat[oi]\b|Rilevat[oa]\b|Attes[oa]\b|Acquisit[oa]\b|Dato\s+atto\b|Preso\s+atto\b|DELIBERA\b|DETERMINA\b|ORDINA\b|IL\s+RESPONSABILE\b|IL\s+SINDACO\b|LA\s+GIUNTA\b|IL\s+CONSIGLIO\b|PARERE\b)|$)'
@@ -256,7 +286,7 @@ def extract_metadata_with_gemini(text: str) -> dict:
         """ + text[:15000] # Passiamo le prime 15.000 battute per contenere i costi ed evitare limiti di token
         
         response = client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='gemini-2.5-flash',
             contents=prompt,
             config={'response_mime_type': 'application/json'}
         )
@@ -270,7 +300,62 @@ def extract_metadata_with_gemini(text: str) -> dict:
             
         return json.loads(raw_text)
     except Exception as e:
-        print(f"[LLM Error] Fallita estrazione con Gemini: {e}")
+        msg = str(e).lower()
+        if "429" in msg or "quota" in msg or "exhausted" in msg:
+            logger.warning("[LLM Quota] Limite di chiamate gratuite raggiunto. Il sistema rallenterà automaticamente...")
+            time.sleep(20) # Mette in pausa per far resettare il contatore di Google al minuto successivo
+        logger.error(f"Fallita estrazione con Gemini: {e}")
+        return {}
+
+def extract_quadro_economico_vision(pdf_path: Path) -> dict:
+    """Usa Gemini Multimodal (Vision) per estrarre il quadro economico dalle immagini del PDF."""
+    if not genai or not os.environ.get("GOOGLE_API_KEY"):
+        return {}
+        
+    try:
+        # Renderizziamo solo le prime 3 pagine e le ultime 2 (dove di solito si trovano i quadri economici)
+        # per risparmiare token ed evitare di saturare l'API.
+        images = list(_render_pdfium_images(pdf_path, dpi=150, max_pages=4))
+        if not images:
+            return {}
+
+        client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
+        
+        prompt = """
+        Analizza le immagini di questo atto amministrativo.
+        Cerca una tabella relativa al "Quadro Economico", "Riepilogo Spese" o "Computo Metrico".
+        Se la trovi, estrai i dati in formato JSON strutturato con un array di voci.
+        Rispondi SOLO con un oggetto JSON valido con la seguente struttura:
+        {
+            "quadro_economico_trovato": true,
+            "totale_complessivo": 12345.67,
+            "voci": [
+                {"descrizione": "Lavori a base d'asta", "importo": 10000.00},
+                {"descrizione": "IVA 22%", "importo": 2200.00}
+            ]
+        }
+        Se non trovi nessun quadro economico o tabella di riepilogo, rispondi {"quadro_economico_trovato": false}.
+        """
+        
+        response = client.models.generate_content(
+            model='gemini-2.5-flash', # Modello ottimizzato per compiti multimodali veloci
+            contents=[prompt] + images,
+            config={'response_mime_type': 'application/json'}
+        )
+        
+        raw_text = response.text.strip()
+        if raw_text.startswith("```json"):
+            raw_text = raw_text[7:-3].strip()
+        elif raw_text.startswith("```"):
+            raw_text = raw_text[3:-3].strip()
+            
+        return json.loads(raw_text)
+    except Exception as e:
+        msg = str(e).lower()
+        if "429" in msg or "quota" in msg or "exhausted" in msg:
+            logger.warning("[Vision Quota] Limite di chiamate gratuite raggiunto. Pausa di sicurezza...")
+            time.sleep(20)
+        logger.error(f"Fallita estrazione Quadro Economico: {e}")
         return {}
 
 def classify_document(oggetto, text, rf_model=None):
@@ -397,7 +482,7 @@ def text_features(text):
     }
 
 
-def extract_from_pdf(path: Path, use_llm: bool = False, rf_model=None) -> dict:
+def extract_from_pdf(path: Path, use_llm: bool = False, rf_model=None, text_dir: Path = None) -> dict:
     """Estrae testo e cattura campi principali da un PDF (testuale -> OCR fallback)."""
     
     # Gestione preliminare dei file .p7m
@@ -433,12 +518,18 @@ def extract_from_pdf(path: Path, use_llm: bool = False, rf_model=None) -> dict:
         "cig": None,
         "cup": None,
         "beneficiario": None,
+        "piva_beneficiario": None,
+        "iban": None,
+        "codice_appalti": None,
+        "importo_lettere": None,
+        "anomalie": None,
         "responsabile": None,
         "ufficio": None,
         "impegno_num": None,
         "impegno_anno": None,
         "accert_num": None,
         "accert_anno": None,
+        "quadro_economico": None,
         "capitolo": None,
         "peg_riga": None,
         "is_visto_contabile": ("VistoContabile" in path.name),
@@ -447,32 +538,50 @@ def extract_from_pdf(path: Path, use_llm: bool = False, rf_model=None) -> dict:
         "missing_amount_expected": False,
     }
 
-    # 1) tentativo testuale
-    try:
-        txt_raw = extract_text_pdf(path_for_parsing) or ""
-    except Exception:
-        txt_raw = ""
+    # 1) Verifica se esiste già un file di testo pre-generato (es. dal backend C#)
+    text_file_path = text_dir / f"{path.stem}.txt" if text_dir else None
+    if text_file_path and text_file_path.exists():
+        text_one = text_file_path.read_text(encoding="utf-8", errors="ignore")
+        text_one = " ".join(text_one.split())
+        out["source"] = "csharp_extracted_text"
+    else:
+        # 2) Tentativo testuale nativo Python (Fallback)
+        try:
+            txt_raw = extract_text_pdf(path_for_parsing) or ""
+        except Exception:
+            txt_raw = ""
 
-    text_one = " ".join((txt_raw or "").split())
+        text_one = " ".join((txt_raw or "").split())
 
-    # Soglia: se testo è molto corto, prova OCR
-    if len(text_one) < 500:
-        probe_txt, good = ocr_pdf_probe(path, dpi=400, pages=(1,2))
-        if good or len(probe_txt) > len(text_one):
-            full_txt = ocr_pdf_full(path, dpi=400)
-            if len(full_txt) > len(text_one):
-                text_one = full_txt
-                out["source"] = "ocr"
+        # Soglia: se testo è molto corto, prova OCR
+        if len(text_one) < 500:
+            probe_txt, good = ocr_pdf_probe(path_for_parsing, dpi=400, pages=(1,2))
+            if good or len(probe_txt) > len(text_one):
+                full_txt = ocr_pdf_full(path_for_parsing, dpi=400)
+                if len(full_txt) > len(text_one):
+                    text_one = full_txt
+                    out["source"] = "ocr"
 
     text_one = normalize_text_for_ml(text_one)
     out["_text"] = text_one
     out["text_sha256"] = hashlib.sha256(text_one.encode("utf-8", errors="ignore")).hexdigest()
     out.update(text_features(text_one))
 
+    # --- Estrazione Avanzata (Regex Potenziate) ---
+    adv_data = {}
+    if advanced_extractor:
+        adv_data = advanced_extractor.extract_entities(text_one)
+
     # --- Estrazione via LLM (Opzionale) ---
     llm_data = {}
     if use_llm:
         llm_data = extract_metadata_with_gemini(text_one)
+        
+        # Applichiamo la Vision API solo se il documento è di natura contabile o un Lavoro Pubblico
+        if out.get("accounting_relevant") or out.get("category") == "Lavori Pubblici":
+            vision_data = extract_quadro_economico_vision(path)
+            if vision_data.get("quadro_economico_trovato"):
+                out["quadro_economico"] = json.dumps(vision_data.get("voci", []), ensure_ascii=False)
 
     # --- Oggetto, Numero Atto, Registro Generale ---
     if llm_data.get("oggetto"):
@@ -515,7 +624,9 @@ def extract_from_pdf(path: Path, use_llm: bool = False, rf_model=None) -> dict:
         if normalized is not None:
             amts_norm.append(normalized)
     out["importi_raw"] = amts
-    out["importo_max"] = max(amts_norm) if amts_norm else None
+    
+    # Se l'estrattore avanzato trova un importo, diamogli priorità
+    out["importo_max"] = adv_data.get("importo_max_estratto") or (max(amts_norm) if amts_norm else None)
     out["importo_sum"] = sum(amts_norm) if amts_norm else None
     out["importi_count"] = len(amts_norm)
     out["missing_amount_expected"] = bool(out["accounting_relevant"] and out["doc_type"] != "VistoContabile" and not amts_norm)
@@ -531,15 +642,20 @@ def extract_from_pdf(path: Path, use_llm: bool = False, rf_model=None) -> dict:
         out["data_registro"] = m.group(2)
 
     # --- CIG / CUP ---
-    if llm_data.get("cig"): out["cig"] = llm_data["cig"].upper()
-    else:
-        m = re.search(RX_CIG, text_one, re.IGNORECASE)
-        if m: out["cig"] = m.group(1).upper()
-        
-    if llm_data.get("cup"): out["cup"] = llm_data["cup"].upper()
-    else:
-        m = re.search(RX_CUP, text_one, re.IGNORECASE)
-        if m: out["cup"] = m.group(1).upper()
+    try:
+        if llm_data.get("cig"): out["cig"] = llm_data["cig"].upper()
+        elif adv_data.get("cig_estratto"): out["cig"] = adv_data["cig_estratto"].upper()
+        else:
+            m = re.search(RX_CIG, text_one, re.IGNORECASE)
+            if m: out["cig"] = m.group(1).upper()
+            
+        if llm_data.get("cup"): out["cup"] = llm_data["cup"].upper()
+        elif adv_data.get("cup_estratto"): out["cup"] = adv_data["cup_estratto"].upper()
+        else:
+            m = re.search(RX_CUP, text_one, re.IGNORECASE)
+            if m: out["cup"] = m.group(1).upper()
+    except Exception as e:
+        logger.warning(f"Errore durante l'estrazione di CIG/CUP per {path.name}: {e}")
 
     # --- beneficiario/fornitore/aggiudicatario ---
     if llm_data.get("beneficiario"):
@@ -554,6 +670,12 @@ def extract_from_pdf(path: Path, use_llm: bool = False, rf_model=None) -> dict:
                     out["beneficiario"] = beneficiario_text.strip()
                     break
     
+    out["piva_beneficiario"] = adv_data.get("piva_beneficiario")
+    out["iban"] = adv_data.get("iban_estratto")
+    out["codice_appalti"] = adv_data.get("codice_appalti")
+    out["importo_lettere"] = adv_data.get("importo_lettere")
+    out["anomalie"] = adv_data.get("anomalie_rilevate")
+
     # --- Responsabile e Ufficio ---
     if llm_data.get("responsabile"):
         out["responsabile"] = llm_data["responsabile"].strip()
@@ -622,7 +744,7 @@ def build_parser():
 def main():
     args = build_parser().parse_args()
     if pytesseract is None:
-        print("[WARN] pytesseract non installato: OCR disattivato, continuo con testo PDF estraibile.")
+        logger.warning("pytesseract non installato: OCR disattivato, continuo con testo PDF estraibile.")
 
     base = Path(args.base)
     csv_path = Path(args.csv) if args.csv else base / "albo_metadati.csv"
@@ -640,9 +762,9 @@ def main():
     if model_path.exists():
         try:
             rf_model = joblib.load(model_path)
-            print(f"[OK] Modello Machine Learning caricato da {model_path}")
+            logger.info(f"Modello Machine Learning caricato da {model_path}")
         except Exception as e:
-            print(f"[WARN] Impossibile caricare il modello ML: {e}")
+            logger.warning(f"Impossibile caricare il modello ML: {e}")
 
     # 1) Metadati
     df = pd.read_csv(csv_path, encoding="utf-8", sep=",")
@@ -680,9 +802,9 @@ def main():
     dfa = pd.DataFrame(rows)
 
     # 3) Processa tutti i PDF locali indipendentemente dai metadati
-    print("Processando PDF locali...")
+    logger.info("Processando PDF locali...")
     files = list(pdf_dir.glob("*.pdf")) + list(pdf_dir.glob("*.php")) + list(pdf_dir.glob("*.p7m"))
-    print(f"Trovati {len(files)} file PDF/PHP")
+    logger.info(f"Trovati {len(files)} file PDF/PHP")
     
     # Caricamento cache dei PDF già elaborati per evitare chiamate inutili all'API
     processed_cache = {}
@@ -691,68 +813,100 @@ def main():
             df_cache = pd.read_csv(out_csv_allegati, encoding="utf-8")
             # Carichiamo i vecchi record in un dizionario con chiave il nome del pdf
             processed_cache = df_cache.set_index('pdf_name').to_dict('index')
-            print(f"Trovati {len(processed_cache)} PDF già elaborati nel CSV. Verranno saltati per risparmiare tempo e API.")
+            logger.info(f"Trovati {len(processed_cache)} PDF già elaborati nel CSV. Verranno saltati per risparmiare tempo e API.")
         except Exception as e:
-            print(f"[WARN] Impossibile caricare la cache dei PDF esistenti: {e}")
+            logger.warning(f"Impossibile caricare la cache dei PDF esistenti: {e}")
 
     # 4) Parsing PDF
     parsed_pdfs = []
     corpus_rows = []
-    for idx, pdf_file in enumerate(files):
-        if idx % 10 == 0:
-            print(f"Processando {idx}/{len(files)}...")
-            
-        if pdf_file.name in processed_cache:
-            info = processed_cache[pdf_file.name]
-            
-            # Se abbiamo il modello ML, rivalutiamo al volo i documenti incerti presenti in cache
-            if rf_model is not None and info.get("classification_confidence") in (None, "ambiguous", "unknown"):
-                cat, sub, conf, terms = classify_document(info.get("oggetto"), info.get("text_preview"), rf_model=rf_model)
-                info["category"] = cat
-                info["subcategory"] = sub
-                info["classification_confidence"] = conf
-                info["classification_terms"] = terms
+    
+    with metrics.start_operation("analisi_pdf") as op:
+        for idx, pdf_file in enumerate(files):
+            if idx % 10 == 0:
+                logger.info(f"Processando {idx}/{len(files)}...")
                 
-            info["pdf_name"] = pdf_file.name # Ripristiniamo la chiave
+            if pdf_file.name in processed_cache:
+                info = processed_cache[pdf_file.name]
+                
+                # Se abbiamo il modello ML, rivalutiamo al volo i documenti incerti presenti in cache
+                if rf_model is not None and info.get("classification_confidence") in (None, "ambiguous", "unknown"):
+                    cat, sub, conf, terms = classify_document(info.get("oggetto"), info.get("text_preview"), rf_model=rf_model)
+                    info["category"] = cat
+                    info["subcategory"] = sub
+                    info["classification_confidence"] = conf
+                    info["classification_terms"] = terms
+                    
+                info["pdf_name"] = pdf_file.name # Ripristiniamo la chiave
+                parsed_pdfs.append(info)
+                
+                # Ricostruiamo la riga per il corpus testuale (RAG) leggendo il .txt se la cache l'ha saltato
+                if not args.no_corpus:
+                    text_path_val = info.get("text_path")
+                    text_path_val = text_path_val if pd.notna(text_path_val) else text_dir / (pdf_file.stem + ".txt")
+                    text_path = Path(text_path_val)
+                    text_full = text_path.read_text(encoding="utf-8", errors="ignore") if text_path.exists() else ""
+                    corpus_rows.append({
+                        **info,
+                        "text": text_full,
+                    })
+                continue
+                
+            info = extract_from_pdf(pdf_file, use_llm=args.use_llm, rf_model=rf_model)
+            text_full = info.pop("_text", "")
+            text_name = pdf_file.stem + ".txt"
+            text_path = text_dir / text_name
+            info["text_path"] = str(text_path)
+            info["text_preview"] = text_full[:1200]
+            corpus_rows.append({
+                **info,
+                "text": text_full,
+            })
             parsed_pdfs.append(info)
-            
-            # Ricostruiamo la riga per il corpus testuale (RAG) leggendo il .txt se la cache l'ha saltato
-            if not args.no_corpus:
-                text_path_val = info.get("text_path")
-                text_path_val = text_path_val if pd.notna(text_path_val) else text_dir / (pdf_file.stem + ".txt")
-                text_path = Path(text_path_val)
-                text_full = text_path.read_text(encoding="utf-8", errors="ignore") if text_path.exists() else ""
-                corpus_rows.append({
-                    **info,
-                    "text": text_full,
-                })
-            continue
-            
-        info = extract_from_pdf(pdf_file, use_llm=args.use_llm, rf_model=rf_model)
-        text_full = info.pop("_text", "")
-        text_name = pdf_file.stem + ".txt"
-        text_path = text_dir / text_name
-        info["text_path"] = str(text_path)
-        info["text_preview"] = text_full[:1200]
-        corpus_rows.append({
-            **info,
-            "text": text_full,
-        })
-        parsed_pdfs.append(info)
+        
+        op.set_items_processed(len(files))
     
     dfp = pd.DataFrame(parsed_pdfs)
-    print(f"\nPDF processati: {len(dfp)}")
-    print(f"PDF con OCR: {(dfp['source']=='ocr').sum()}")
-    print(f"PDF con testo: {(dfp['source']=='text').sum()}")
+    logger.info(f"PDF processati: {len(dfp)}")
+    logger.info(f"PDF con OCR: {(dfp['source']=='ocr').sum()}")
+    logger.info(f"PDF con testo: {(dfp['source']=='text').sum()}")
 
     # Statistiche sul tipo di documento
-    print("\nStatistiche tipo documento:")
-    print(dfp["doc_type"].value_counts())
+    logger.info(f"Statistiche tipo documento:\n{dfp['doc_type'].value_counts().to_string()}")
     
-    # Rimuoviamo la pulizia complessa, affidandoci a xlsxwriter
+    # 6) Costruisci tabella per atto (collapse allegati)
+    # Raggruppiamo i PDF derivanti dallo stesso atto. Nello scraper i file sono nominati
+    # solitamente come "titolo_idx.pdf". Rimuovendo il suffisso "_idx" raggruppiamo per atto originale.
+    def get_atto_group(filename):
+        stem = Path(filename).stem
+        return re.sub(r'_\d+$', '', stem)
+        
+    dfp["atto_group"] = dfp["pdf_name"].apply(get_atto_group)
     
-    # 6) Costruisci tabella per atto (collapse allegati) - versione semplificata per PDF processati
-    # KPI veloci sui PDF trovati
+    df_atti = dfp.groupby("atto_group", dropna=False).agg({
+        "doc_type": lambda x: next(iter([i for i in x if pd.notna(i) and i != "unknown"]), "unknown"),
+        "category": lambda x: next(iter([i for i in x if pd.notna(i)]), None),
+        "subcategory": lambda x: next(iter([i for i in x if pd.notna(i)]), None),
+        "oggetto": lambda x: next(iter([i for i in x if pd.notna(i)]), None),
+        "numero_atto": lambda x: next(iter([i for i in x if pd.notna(i)]), None),
+        "data_atto": lambda x: next(iter([i for i in x if pd.notna(i)]), None),
+        "importo_max": "max",
+        "importo_sum": "sum",
+        "cig": lambda x: ",".join(set(str(i) for i in x if pd.notna(i) and str(i).strip())),
+        "cup": lambda x: ",".join(set(str(i) for i in x if pd.notna(i) and str(i).strip())),
+        "beneficiario": lambda x: " | ".join(set(str(i) for i in x if pd.notna(i) and str(i).strip())),
+        "accounting_relevant": "any",
+        "missing_amount_expected": "any",
+        "anomalie": lambda x: " | ".join(set(str(i) for i in x if pd.notna(i) and str(i).strip()))
+    }).reset_index()
+
+    # Rimuoviamo le stringhe vuote spurie generate dalle lambda
+    for col in ["cig", "cup", "beneficiario", "anomalie"]:
+        df_atti[col] = df_atti[col].replace("", None)
+
+    out_csv_failed = base / "failed_extractions.csv"
+    failed_df = dfp[dfp["source"].isin(["p7m_extraction_failed", "error", "unknown"]) | (dfp["text_chars"].fillna(0) < 50)]
+
     # Top fornitori per somma importo_max
     fornitori = (dfp.dropna(subset=["beneficiario"])
                     .groupby("beneficiario", dropna=False)["importo_max"]
@@ -768,12 +922,13 @@ def main():
         "source", "text_sha256", "text_chars", "text_words", "unique_words",
         "euro_mentions", "cig", "cup", "cig_mentions", "cup_mentions", "date_mentions",
         "years_mentioned", "importo_max", "importo_sum", "importi_count",
-        "accounting_relevant", "missing_amount_expected",
+        "accounting_relevant", "missing_amount_expected", "importo_lettere", "piva_beneficiario",
+        "iban", "codice_appalti", "quadro_economico", "anomalie"
     ]
     dff = dfp[[c for c in feature_cols if c in dfp.columns]].copy()
 
     # 7) Salva CSV/Excel
-    print("\nSalvataggio CSV...")
+    logger.info("Salvataggio CSV...")
     dfp.to_csv(out_csv_allegati, index=False, encoding="utf-8")
     dff.to_csv(out_csv_features, index=False, encoding="utf-8")
     if not args.no_corpus:
@@ -783,14 +938,13 @@ def main():
                 text_path = Path(row["text_path"])
                 text_path.write_text(row["text"], encoding="utf-8", errors="ignore")
                 f.write(json.dumps(row, ensure_ascii=False) + "\n")
-    # Per atti, usiamo i dati originali dei metadati se disponibili
-    if len(dfa) > 0:
-        dfa.to_csv(out_csv_atti, index=False, encoding="utf-8")
-    else:
-        dfp.to_csv(out_csv_atti, index=False, encoding="utf-8")
     
-    print("CSV salvati con successo!")
-    print("\nSalvataggio Excel con motore 'xlsxwriter'...")
+    df_atti.to_csv(out_csv_atti, index=False, encoding="utf-8")
+    if not failed_df.empty:
+        failed_df.to_csv(out_csv_failed, index=False, encoding="utf-8")
+    
+    logger.info("CSV salvati con successo!")
+    logger.info("Salvataggio Excel con motore 'xlsxwriter'...")
     
     try:
         with pd.ExcelWriter(out_xlsx, engine="xlsxwriter") as xl:
@@ -800,21 +954,33 @@ def main():
             kpi_doctype.to_excel(xl, index=False, sheet_name="kpi_doctype")
             dff.to_excel(xl, index=False, sheet_name="features_ml")
             fornitori.head(50).to_excel(xl, index=False, sheet_name="fornitori_top50")
-            if len(dfa) > 0:
-                dfa.to_excel(xl, index=False, sheet_name="metadati")
+            # Aggiungiamo i due fogli mancanti e corretti
+            df_atti.to_excel(xl, index=False, sheet_name="atti_estratti")
+            df.to_excel(xl, index=False, sheet_name="metadati") # Usa df (non esploso) invece di dfa
             
             # Crea un foglio dedicato per revisionare comodamente le predizioni del modello ML
             ml_preds = dfp[dfp['classification_confidence'] == 'ml_predicted']
             if not ml_preds.empty:
                 cols_review = [c for c in ["pdf_name", "doc_type", "category", "oggetto", "text_preview"] if c in dfp.columns]
-                ml_preds[cols_review].to_excel(xl, index=False, sheet_name="revisione_ml")
+                df_review = ml_preds[cols_review].copy()
+                df_review.insert(3, 'categoria_corretta', None) # Colonna vuota per il feedback umano
+                df_review.to_excel(xl, index=False, sheet_name="revisione_ml")
+                
+            # Salva gli atti con anomalie per il feedback loop (Active Learning)
+            anomalies_df = dfp[dfp['anomalie'].notna()]
+            if not anomalies_df.empty:
+                df_anomalies_review = anomalies_df[['pdf_name', 'importo_max', 'importo_lettere', 'piva_beneficiario', 'iban', 'anomalie', 'text_preview']].copy()
+                df_anomalies_review.insert(6, 'conferma_anomalia', None) # Scrivere 'NO' per segnalare un falso positivo
+                df_anomalies_review.to_excel(xl, index=False, sheet_name="anomalie_da_addestrare")
         
-        print("Excel salvato con successo!")
+        logger.info("Excel salvato con successo!")
     except Exception as e:
-        print(f"[WARN] Errore salvataggio Excel con xlsxwriter: {e}")
-        print("I dati CSV sono comunque disponibili!")
+        logger.warning(f"Errore salvataggio Excel con xlsxwriter: {e}")
+        logger.info("I dati CSV sono comunque disponibili!")
 
-    print(f"\n[OK] Salvati:\n- {out_csv_allegati}\n- {out_csv_atti}\n- {out_csv_features}\n- {out_corpus_jsonl if not args.no_corpus else '(corpus disattivato)'}\n- {out_xlsx} (se riuscito)")
+    logger.info(f"Salvati:\n- {out_csv_allegati}\n- {out_csv_atti}\n- {out_csv_features}\n- {out_corpus_jsonl if not args.no_corpus else '(corpus disattivato)'}\n- {out_xlsx} (se riuscito)")
+    
+    metrics.export_to_file(str((base / "metrics_analyze_albo.json").resolve()))
 
 if __name__ == "__main__":
     main()

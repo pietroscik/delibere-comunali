@@ -1,0 +1,64 @@
+{
+  "exported_at": "2026-06-08T18:23:50.518237",
+  "session_start": 1780935820.1675277,
+  "summary": {
+    "session_duration": 10.350709915161133,
+    "total_operations": 1,
+    "total_metric_points": 4,
+    "counters": {
+      "operations.success": 1,
+      "operations.total": 1
+    },
+    "gauges": {},
+    "operation_statistics": {
+      "analisi_pdf": {
+        "count": 1,
+        "total_duration": 0.3351600170135498,
+        "successes": 1,
+        "failures": 0,
+        "avg_duration": 0.3351600170135498,
+        "success_rate": 1.0
+      }
+    }
+  },
+  "recent_operations": [
+    {
+      "operation_name": "analisi_pdf",
+      "start_time": 1780935824.2705007,
+      "end_time": 1780935824.6056607,
+      "duration": 0.3351600170135498,
+      "success": true,
+      "error_type": null,
+      "items_processed": 1530,
+      "bytes_processed": 0,
+      "throughput": 4564.983656562308,
+      "custom_metrics": {}
+    }
+  ],
+  "recent_points": [
+    {
+      "name": "counter.operations.success",
+      "value": 1,
+      "timestamp": 1780935824.6056607,
+      "tags": {}
+    },
+    {
+      "name": "counter.operations.total",
+      "value": 1,
+      "timestamp": 1780935824.6056607,
+      "tags": {}
+    },
+    {
+      "name": "operation.duration.analisi_pdf",
+      "value": 0.3351600170135498,
+      "timestamp": 1780935824.6056607,
+      "tags": {}
+    },
+    {
+      "name": "operation.throughput.analisi_pdf",
+      "value": 4564.983656562308,
+      "timestamp": 1780935824.6056607,
+      "tags": {}
+    }
+  ]
+}

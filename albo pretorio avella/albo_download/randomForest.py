@@ -20,6 +20,52 @@ try:
 except FileNotFoundError:
     raise FileNotFoundError(f"File non trovato: {allegati_path}. Assicurati che esista per recuperare i testi.")
 
+# --- FEEDBACK LOOP (ACTIVE LEARNING) ---
+# Legge eventuali correzioni manuali fatte dall'utente sull'Excel e aggiorna il dataset base
+excel_path = os.path.join(script_dir, 'albo_analisi.xlsx')
+if os.path.exists(excel_path):
+    try:
+        df_revision = pd.read_excel(excel_path, sheet_name='revisione_ml')
+        if 'categoria_corretta' in df_revision.columns:
+            corrections = df_revision.dropna(subset=['categoria_corretta']).copy()
+            corrections['categoria_corretta'] = corrections['categoria_corretta'].astype(str).str.strip()
+            corrections = corrections[corrections['categoria_corretta'] != '']
+            if not corrections.empty:
+                print(f"[*] Trovate {len(corrections)} correzioni manuali in Excel. Aggiorno il dataset di training...")
+                corr_map = dict(zip(corrections['pdf_name'], corrections['categoria_corretta']))
+                applied = 0
+                for i, row in df_features.iterrows():
+                    if row['pdf_name'] in corr_map:
+                        df_features.at[i, 'category'] = corr_map[row['pdf_name']]
+                        df_features.at[i, 'classification_confidence'] = 'high' # Promuoviamo a Ground Truth umano
+                        applied += 1
+                if applied > 0:
+                    df_features.to_csv(file_path, index=False)
+                    
+                    # Propaghiamo la correzione anche alla cache, altrimenti analyze_albo la riporterà allo stato errato al prossimo giro
+                    for i, row in df_allegati.iterrows():
+                        if row['pdf_name'] in corr_map:
+                            df_allegati.at[i, 'category'] = corr_map[row['pdf_name']]
+                            df_allegati.at[i, 'classification_confidence'] = 'high'
+                    df_allegati.to_csv(allegati_path, index=False)
+                    print(f"[*] Applicate {applied} correzioni ai dataset e alla Cache.\n")
+                    
+        # --- FEEDBACK LOOP: Falsi positivi nelle anomalie ---
+        if 'anomalie_da_addestrare' in pd.ExcelFile(excel_path).sheet_names:
+            df_anomalie = pd.read_excel(excel_path, sheet_name='anomalie_da_addestrare')
+            if 'conferma_anomalia' in df_anomalie.columns:
+                falsi_positivi = df_anomalie[df_anomalie['conferma_anomalia'].astype(str).str.strip().str.upper().isin(['NO', 'N', 'FALSO', 'FALSE'])]
+                if not falsi_positivi.empty:
+                    print(f"[*] Trovati {len(falsi_positivi)} falsi positivi per le anomalie. Aggiorno i dataset per ignorarli...")
+                    fp_pdfs = set(falsi_positivi['pdf_name'])
+                    df_features.loc[df_features['pdf_name'].isin(fp_pdfs), 'anomalie'] = np.nan
+                    df_features.to_csv(file_path, index=False)
+                    df_allegati.loc[df_allegati['pdf_name'].isin(fp_pdfs), 'anomalie'] = np.nan
+                    df_allegati.to_csv(allegati_path, index=False)
+                    print(f"[*] Rimosse le anomalie per {len(fp_pdfs)} documenti.\n")
+    except Exception as e:
+        print(f"[WARN] Impossibile leggere le correzioni dall'Excel: {e}")
+
 # Uniamo i due dataset usando 'pdf_name'
 if 'pdf_name' in df_features.columns and 'pdf_name' in df_allegati.columns:
     # how='inner' mantiene solo i documenti presenti in entrambi i file

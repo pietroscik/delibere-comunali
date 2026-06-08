@@ -8,6 +8,7 @@ __pycache__/
 .coverage
 coverage/
 htmlcov/
+.tmp.driveupload
 
 # Virtualenvs
 .venv/
@@ -39,7 +40,9 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
+.tmp.driveupload/
+.tmp.drivedownload/
+.tmp/
 # Project-specific local artifacts
 albo pretorio avella/.venv/
 albo pretorio avella/.spyproject/
