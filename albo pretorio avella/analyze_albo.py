@@ -23,6 +23,7 @@ from pathlib import Path
 from datetime import datetime
 
 import pandas as pd
+import numpy as np
 import pypdfium2 as pdfium
 from dateutil import parser as dateparser
 import joblib
@@ -177,33 +178,33 @@ RX_SKIP_PATTERNS = {
 }
 
 # Regex per trovare l'importo
-RX_EURO = r'€\s*([\d\.,]+)'
-RX_EURO_FALLBACK = r'euro\s*([\d\.,]+)'
-RX_AMOUNT_LOOSE = r'(?:importo|totale|spesa complessiva|impegno di spesa|per\s+un\s+importo\s+di)\s+€?\s*([\d\.,]+)'
+RX_EURO = re.compile(r'€\s*([\d\.,]+)')
+RX_EURO_FALLBACK = re.compile(r'euro\s*([\d\.,]+)', re.IGNORECASE)
+RX_AMOUNT_LOOSE = re.compile(r'(?:importo|totale|spesa complessiva|impegno di spesa|per\s+un\s+importo\s+di)\s+€?\s*([\d\.,]+)', re.IGNORECASE)
 
 # Regex per CIG e CUP (Migliorate per intercettare C.I.G., spaziature, ecc.)
-RX_CIG = r'\bC\.?I\.?G\.?(?:\s*(?:n\.|numero|codice)?\s*[:\-]?\s*)([A-Z0-9]{10})\b'
-RX_CUP = r'\bC\.?U\.?P\.?(?:\s*(?:n\.|numero|codice)?\s*[:\-]?\s*)([A-Z0-9]{15})\b'
+RX_CIG = re.compile(r'\bC\.?I\.?G\.?(?:\s*(?:n\.|numero|codice)?\s*[:\-]?\s*)([A-Z0-9]{10})\b', re.IGNORECASE)
+RX_CUP = re.compile(r'\bC\.?U\.?P\.?(?:\s*(?:n\.|numero|codice)?\s*[:\-]?\s*)([A-Z0-9]{15})\b', re.IGNORECASE)
 
 # Regex per dati specifici dell'atto
-RX_OGGETTO = r'OGGETTO:\s*(.+?)(?=\s+(?:Registro\s+Generale\b|L[\'’\s]anno\b|CIG\s*[:\-]|CUP\s*[:\-]|Premess[oa]\b|Vist[oi]\s*(?::|il\b|la\b|i\b|le\b|che\b|l[\'’])|Considerat[oa]\b|Richiamat[oi]\b|Rilevat[oa]\b|Attes[oa]\b|Acquisit[oa]\b|Dato\s+atto\b|Preso\s+atto\b|DELIBERA\b|DETERMINA\b|ORDINA\b|IL\s+RESPONSABILE\b|IL\s+SINDACO\b|LA\s+GIUNTA\b|IL\s+CONSIGLIO\b|PARERE\b)|$)'
-RX_NUM_ATTO = r'N\.\s*(\d+)\s*DEL\s*(\d{2}/\d{2}/\d{4})'
-RX_REG_GEN = r'Registro Generale\s*N\.\s*(\d+)\s*DEL\s*(\d{2}/\d{2}/\d{4})'
+RX_OGGETTO = re.compile(r'OGGETTO:\s*(.+?)(?=\s+(?:Registro\s+Generale\b|L[\'’\s]anno\b|CIG\s*[:\-]|CUP\s*[:\-]|Premess[oa]\b|Vist[oi]\s*(?::|il\b|la\b|i\b|le\b|che\b|l[\'’])|Considerat[oa]\b|Richiamat[oi]\b|Rilevat[oa]\b|Attes[oa]\b|Acquisit[oa]\b|Dato\s+atto\b|Preso\s+atto\b|DELIBERA\b|DETERMINA\b|ORDINA\b|IL\s+RESPONSABILE\b|IL\s+SINDACO\b|LA\s+GIUNTA\b|IL\s+CONSIGLIO\b|PARERE\b)|$)', re.IGNORECASE)
+RX_NUM_ATTO = re.compile(r'N\.\s*(\d+)\s*DEL\s*(\d{2}/\d{2}/\d{4})', re.IGNORECASE)
+RX_REG_GEN = re.compile(r'Registro Generale\s*N\.\s*(\d+)\s*DEL\s*(\d{2}/\d{2}/\d{4})', re.IGNORECASE)
 
-RX_RESPONSABILE = r'IL\s+RESPONSABILE\s+DEL\s+SERVIZIO\s*(?:\n)?\s*(?:Finanziario)?\s*(?:dott\.|dott\.ssa|Avv\.|Ing\.|Arch\.)?\s*([A-Z][a-zà-úA-Z\s\.\'’]+(?:\s[A-Z][a-zà-úA-Z\s\.\'’]+)*)'
-RX_UFFICIO = r'(?:Area|Settore|Servizio)\s+([A-Z][a-zà-úA-Z\s]+)'
+RX_RESPONSABILE = re.compile(r'IL\s+RESPONSABILE\s+DEL\s+SERVIZIO\s*(?:\n)?\s*(?:Finanziario)?\s*(?:dott\.|dott\.ssa|Avv\.|Ing\.|Arch\.)?\s*([A-Z][a-zà-úA-Z\s\.\'’]+(?:\s[A-Z][a-zà-úA-Z\s\.\'’]+)*)', re.IGNORECASE)
+RX_UFFICIO = re.compile(r'(?:Area|Settore|Servizio)\s+([A-Z][a-zà-úA-Z\s]+)', re.IGNORECASE)
 
 # Regex per il beneficiario (più robusta)
 RX_BENEF = [
     # Pattern più specifici e affidabili vengono provati prima
-    r'Denominazione:\s+([A-Z\s\.\'’\-]+)',
+    re.compile(r'Denominazione:\s+([A-Z\s\.\'’\-]+)', re.IGNORECASE),
 ]
 
 
 # Regex per dati contabili
-RX_IMPEGNO = r'(?:impegno|impegno\s+n\.|N\.\s+Impegno\s+Definitivo)\s*[:\s]*(\d+)'
-RX_ACCERT = r'(?:accertamento|accertamento\s+n\.|N\.\s+Accertamento)\s*[:\s]*(\d+)'
-RX_CAPITOLO = r'(?:capitolo|Capitolo\s+Quinti\s+Livello)\s*[:\s]*([\d\.]+)'
+RX_IMPEGNO = re.compile(r'(?:impegno|impegno\s+n\.|N\.\s+Impegno\s+Definitivo)\s*[:\s]*(\d+)', re.IGNORECASE)
+RX_ACCERT = re.compile(r'(?:accertamento|accertamento\s+n\.|N\.\s+Accertamento)\s*[:\s]*(\d+)', re.IGNORECASE)
+RX_CAPITOLO = re.compile(r'(?:capitolo|Capitolo\s+Quinti\s+Livello)\s*[:\s]*([\d\.]+)', re.IGNORECASE)
 RX_PEG     = re.compile(r"\b(PEG|missione|programma)\b[^\n\r]*", re.I)
 
 # --- Classification Rules ---
@@ -391,9 +392,14 @@ def classify_document(oggetto, text, rf_model=None):
     if (category is None or confidence == "ambiguous") and rf_model is not None:
         text_preview = normalize_text_for_ml(text_str)[:1200]
         if len(text_preview) > 50:
-            category = rf_model.predict([text_preview])[0]
-            confidence = "ml_predicted"
-            terms = ["random_forest"]
+            try:
+                max_prob = np.max(rf_model.predict_proba([text_preview]))
+                if max_prob >= 0.50:
+                    category = rf_model.predict([text_preview])[0]
+                    confidence = "ml_predicted"
+                    terms = ["random_forest"]
+            except Exception as e:
+                logger.warning(f"Errore durante la predizione ML: {e}")
 
     subcategory = None
     for sub, sub_keywords in SUBCATEGORY_RULES.items():
@@ -587,7 +593,7 @@ def extract_from_pdf(path: Path, use_llm: bool = False, rf_model=None, text_dir:
     if llm_data.get("oggetto"):
         out["oggetto"] = llm_data["oggetto"]
     else:
-        m = re.search(RX_OGGETTO, text_one, re.IGNORECASE)
+        m = RX_OGGETTO.search(text_one)
         if m:
             oggetto_estratto = m.group(1).strip()
             # Tronca se troppo lungo
@@ -610,11 +616,11 @@ def extract_from_pdf(path: Path, use_llm: bool = False, rf_model=None, text_dir:
         amts = llm_data["importi_raw"]
     else:
         amts = []
-        for m in re.finditer(RX_EURO, text_one):
+        for m in RX_EURO.finditer(text_one):
             amts.append(m.group(1))
-        for m in re.finditer(RX_AMOUNT_LOOSE, text_one): 
+        for m in RX_AMOUNT_LOOSE.finditer(text_one): 
             amts.append(m.group(1))
-        for m in re.finditer(RX_EURO_FALLBACK, text_one):
+        for m in RX_EURO_FALLBACK.finditer(text_one):
             amts.append(m.group(1))
     # (opzionale) cattura importi SENZA simbolo € quando preceduti da parole chiave
     
@@ -631,12 +637,12 @@ def extract_from_pdf(path: Path, use_llm: bool = False, rf_model=None, text_dir:
     out["importi_count"] = len(amts_norm)
     out["missing_amount_expected"] = bool(out["accounting_relevant"] and out["doc_type"] != "VistoContabile" and not amts_norm)
 
-    m = re.search(RX_NUM_ATTO, text_one, re.IGNORECASE)
+    m = RX_NUM_ATTO.search(text_one)
     if m:
         out["numero_atto"] = m.group(1)
         out["data_atto"] = m.group(2)
 
-    m = re.search(RX_REG_GEN, text_one, re.IGNORECASE)
+    m = RX_REG_GEN.search(text_one)
     if m:
         out["numero_registro"] = m.group(1)
         out["data_registro"] = m.group(2)
@@ -646,13 +652,13 @@ def extract_from_pdf(path: Path, use_llm: bool = False, rf_model=None, text_dir:
         if llm_data.get("cig"): out["cig"] = llm_data["cig"].upper()
         elif adv_data.get("cig_estratto"): out["cig"] = adv_data["cig_estratto"].upper()
         else:
-            m = re.search(RX_CIG, text_one, re.IGNORECASE)
+            m = RX_CIG.search(text_one)
             if m: out["cig"] = m.group(1).upper()
             
         if llm_data.get("cup"): out["cup"] = llm_data["cup"].upper()
         elif adv_data.get("cup_estratto"): out["cup"] = adv_data["cup_estratto"].upper()
         else:
-            m = re.search(RX_CUP, text_one, re.IGNORECASE)
+            m = RX_CUP.search(text_one)
             if m: out["cup"] = m.group(1).upper()
     except Exception as e:
         logger.warning(f"Errore durante l'estrazione di CIG/CUP per {path.name}: {e}")
@@ -662,7 +668,7 @@ def extract_from_pdf(path: Path, use_llm: bool = False, rf_model=None, text_dir:
         out["beneficiario"] = llm_data["beneficiario"].strip()
     else:
         for rx_pattern in RX_BENEF:
-            m = re.search(rx_pattern, text_one, re.IGNORECASE)
+            m = rx_pattern.search(text_one)
             if m:
                 beneficiario_text = m.group(1).strip(" :;-|")
                 beneficiario_text = re.sub(r'\s*-\s*Progressivo Fornitore.*', '', beneficiario_text, flags=re.IGNORECASE)
@@ -680,21 +686,21 @@ def extract_from_pdf(path: Path, use_llm: bool = False, rf_model=None, text_dir:
     if llm_data.get("responsabile"):
         out["responsabile"] = llm_data["responsabile"].strip()
     else:
-        m = re.search(RX_RESPONSABILE, text_one, re.IGNORECASE)
+        m = RX_RESPONSABILE.search(text_one)
         if m:
             out["responsabile"] = m.group(1).strip()
-    m = re.search(RX_UFFICIO, text_one, re.IGNORECASE)
+    m = RX_UFFICIO.search(text_one)
     if m:
         out["ufficio"] = m.group(1).strip()
 
     # --- impegno/accertamento ---
-    m = re.search(RX_IMPEGNO, text_one, re.IGNORECASE)
+    m = RX_IMPEGNO.search(text_one)
     if m:
         out["impegno_num"]  = m.group(1)
         if len(m.groups()) > 1 and m.group(2):
             out["impegno_anno"] = m.group(2)
             
-    m = re.search(RX_ACCERT, text_one, re.IGNORECASE)
+    m = RX_ACCERT.search(text_one)
     if m:
         out["accert_num"]  = m.group(1)
         if len(m.groups()) > 1 and m.group(2):
@@ -702,7 +708,7 @@ def extract_from_pdf(path: Path, use_llm: bool = False, rf_model=None, text_dir:
         
 
     # --- capitolo & PEG ---
-    m = re.search(RX_CAPITOLO, text_one, re.IGNORECASE)
+    m = RX_CAPITOLO.search(text_one)
     if m:
         out["capitolo"] = m.group(1)
     m = RX_PEG.search(text_one)

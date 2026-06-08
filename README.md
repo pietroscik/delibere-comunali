@@ -109,6 +109,7 @@ Flusso `run_pipeline.py`:
 4. (se `--clean-texts`) `clean_texts.py`
 5. `validate_output.py` (con `--fail-on-warning` se `--strict-validation`)
 6. `verify_output.py` (verifica automatica dell'Excel generato)
+7. `explore_albo.py` (generazione automatica di reportistica e statistiche)
 
 ### 4) Dashboard e RAG
 
@@ -123,10 +124,13 @@ python3 -m streamlit run rag_app.py
 - `albo_download/allegati_parsed.csv`: estrazioni per documento.
 - `albo_download/atti_parsed.csv`: estrazioni raggruppate per atto (collassando allegati multipli).
 - `albo_download/documenti_features.csv`: feature estratte per il machine learning.
+- `albo_download/documenti_features_updated.csv`: feature aggiornate in seguito alla riclassificazione ML.
+- `albo_download/documenti_riclassificati.csv`: documenti ambigui risolti e classificati dal modello ML.
 - `albo_download/documenti_corpus.jsonl`: corpus RAG / Addestramento LLM in formato JSONL.
 - `albo_download/failed_extractions.csv`: tracking dei file falliti o con testi insufficienti.
 - `albo_download/texts/*.txt`: file di testo crudi testuali convertiti (nativi o OCR).
 - `albo_download/albo_analisi.xlsx`: output tabellare multi-sheet con KPI e dati pronti (fogli: `pdf_analisi`, `kpi_source`, `kpi_visto_contabile`, `kpi_doctype`, `features_ml`, `fornitori_top50`, `atti_estratti`, `metadati`, `revisione_ml`, `anomalie_da_addestrare`).
+- `albo_download/metrics_analyze_albo.json`: telemetria e performance dell'analisi dei PDF.
 
 **Nota sulla qualità del testo estratto:**
 I file in `texts/` e il campo `text` in `documenti_corpus.jsonl` contengono il testo estratto dai PDF. Questo testo include spesso boilerplate (es. `"COPIA Piazza Municipio..."`) e sezioni burocratiche standard a fine documento. Per task di analisi NLP o RAG, è consigliabile eseguire la pipeline con l'opzione `--clean-texts`. Rispetto alle versioni precedenti, ora l'analisi **estrae sistematicamente** dati strutturati avanzati come **CIG**, **CUP**, **IBAN** e **Importi** tramite regex potenziate e chiamate opzionali a LLM (`--use-llm`).

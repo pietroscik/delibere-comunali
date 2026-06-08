@@ -1,7 +1,7 @@
 issue,count,total,percent,priority,recommendation
 metadati_senza_tipologia,792,1456,54.4,1,Rigenerare metadati puliti o ricavare tipologia dagli allegati.
-documenti_senza_importi,514,1530,33.59,1,Dato descrittivo: molti atti non devono contenere importi.
-atti_contabili_senza_importi,174,1530,11.37,2,Priorita' reale: migliorare regex importi/OCR sui soli atti contabili.
+documenti_senza_importi,515,1530,33.66,1,Dato descrittivo: molti atti non devono contenere importi.
+atti_contabili_senza_importi,175,1530,11.44,2,Priorita' reale: migliorare regex importi/OCR sui soli atti contabili.
 testi_troppo_corti,117,1530,7.65,3,"Controllare OCR, PDF vuoti o allegati non deliberativi."
 tipo_documento_unknown,35,1530,2.29,3,Migliorare inferenza tipo da filename/testo.
 testi_duplicati,26,1530,1.7,3,Deduplicare corpus prima di training/embedding.

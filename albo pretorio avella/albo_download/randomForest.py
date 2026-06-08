@@ -33,22 +33,19 @@ if os.path.exists(excel_path):
             if not corrections.empty:
                 print(f"[*] Trovate {len(corrections)} correzioni manuali in Excel. Aggiorno il dataset di training...")
                 corr_map = dict(zip(corrections['pdf_name'], corrections['categoria_corretta']))
-                applied = 0
-                for i, row in df_features.iterrows():
-                    if row['pdf_name'] in corr_map:
-                        df_features.at[i, 'category'] = corr_map[row['pdf_name']]
-                        df_features.at[i, 'classification_confidence'] = 'high' # Promuoviamo a Ground Truth umano
-                        applied += 1
-                if applied > 0:
+                
+                mask_features = df_features['pdf_name'].isin(corr_map.keys())
+                if mask_features.any():
+                    df_features.loc[mask_features, 'category'] = df_features.loc[mask_features, 'pdf_name'].map(corr_map)
+                    df_features.loc[mask_features, 'classification_confidence'] = 'high' # Promuoviamo a Ground Truth umano
                     df_features.to_csv(file_path, index=False)
                     
-                    # Propaghiamo la correzione anche alla cache, altrimenti analyze_albo la riporterà allo stato errato al prossimo giro
-                    for i, row in df_allegati.iterrows():
-                        if row['pdf_name'] in corr_map:
-                            df_allegati.at[i, 'category'] = corr_map[row['pdf_name']]
-                            df_allegati.at[i, 'classification_confidence'] = 'high'
+                    mask_allegati = df_allegati['pdf_name'].isin(corr_map.keys())
+                    if mask_allegati.any():
+                        df_allegati.loc[mask_allegati, 'category'] = df_allegati.loc[mask_allegati, 'pdf_name'].map(corr_map)
+                        df_allegati.loc[mask_allegati, 'classification_confidence'] = 'high'
                     df_allegati.to_csv(allegati_path, index=False)
-                    print(f"[*] Applicate {applied} correzioni ai dataset e alla Cache.\n")
+                    print(f"[*] Applicate {mask_features.sum()} correzioni ai dataset e alla Cache.\n")
                     
         # --- FEEDBACK LOOP: Falsi positivi nelle anomalie ---
         if 'anomalie_da_addestrare' in pd.ExcelFile(excel_path).sheet_names:
@@ -86,8 +83,8 @@ for col in ['text_preview', 'extracted_text', 'text', 'testo', 'text_preview_all
 if not text_column:
     raise ValueError(f"ERRORE: Nessuna colonna di testo trovata nel dataset unito.")
 
-# Rimuoviamo eventuali righe con testo o categoria nulli per evitare errori
-df = df.dropna(subset=[text_column, 'category'])
+# Rimuoviamo eventuali righe con testo nullo per evitare errori, ma manteniamo i documenti senza categoria per poterli riclassificare
+df = df.dropna(subset=[text_column])
 
 # 2. Selezione dei dati per l'addestramento e la valutazione
 # Filtriamo SOLO i documenti classificati con "high" confidence dalle tue regex
@@ -107,7 +104,7 @@ pipeline = ImbPipeline([
     # Ottimizzazione: parole singole + bigrammi (es. "lavori pubblici"), scartiamo parole presenti in >80% dei doc (es. "il", "comune") o in <2 doc
     ('tfidf', TfidfVectorizer(max_features=3000, ngram_range=(1, 2), max_df=0.8, min_df=2)), 
     ('oversampler', RandomOverSampler(random_state=42)), # Bilancia le classi minoritarie
-    ('clf', RandomForestClassifier(n_estimators=200, random_state=42)) # Raddoppiati gli alberi decisionali
+    ('clf', RandomForestClassifier(n_estimators=200, random_state=42, n_jobs=-1)) # Raddoppiati gli alberi decisionali + multithreading
 ])
 
 # 5. Addestramento del modello
@@ -133,7 +130,7 @@ print(f"\n[OK] Modello salvato con successo in: {model_path}")
 
 # 7. Applicazione del Modello ai Documenti "Ambigui"
 # Ora che il modello è validato, lo usiamo per prevedere la categoria dei documenti ambigui
-ambiguous_df = df[df['classification_confidence'].isin(['ambiguous', 'unknown'])].copy()
+ambiguous_df = df[df['classification_confidence'].isna() | df['classification_confidence'].isin(['ambiguous', 'unknown'])].copy()
 
 if not ambiguous_df.empty:
     print(f"\n--- RICLASSIFICAZIONE DOCUMENTI AMBIGUI ---")
@@ -175,20 +172,22 @@ if not ambiguous_df.empty:
     mappa_nuove_categorie = dict(zip(sicuri_df['pdf_name'], sicuri_df['final_category']))
     
     # Aggiorniamo df_features (il dataset originale caricato all'inizio)
-    nuove_cat_assegnate = 0
-    for i, row in df_features.iterrows():
-        pdf = row['pdf_name']
-        if pdf in mappa_nuove_categorie:
-            df_features.at[i, 'category'] = mappa_nuove_categorie[pdf]
-            df_features.at[i, 'classification_confidence'] = 'high_ml' # Indichiamo che è stato risolto dal Machine Learning
-            nuove_cat_assegnate += 1
+    mask_features_amb = df_features['pdf_name'].isin(mappa_nuove_categorie.keys())
+    if mask_features_amb.any():
+        df_features.loc[mask_features_amb, 'category'] = df_features.loc[mask_features_amb, 'pdf_name'].map(mappa_nuove_categorie)
+        df_features.loc[mask_features_amb, 'classification_confidence'] = 'high_ml'
             
-    # Salviamo il dataset aggiornato in un nuovo file per non perdere l'originale
-    updated_features_path = os.path.join(script_dir, 'documenti_features_updated.csv')
-    df_features.to_csv(updated_features_path, index=False)
+    mask_allegati_amb = df_allegati['pdf_name'].isin(mappa_nuove_categorie.keys())
+    if mask_allegati_amb.any():
+        df_allegati.loc[mask_allegati_amb, 'category'] = df_allegati.loc[mask_allegati_amb, 'pdf_name'].map(mappa_nuove_categorie)
+        df_allegati.loc[mask_allegati_amb, 'classification_confidence'] = 'high_ml'
+            
+    # Sovrascriviamo i dataset originali in modo che explore_albo e dashboard vedano i dati corretti
+    df_features.to_csv(file_path, index=False)
+    df_allegati.to_csv(allegati_path, index=False)
     
-    print(f"Aggiornate con successo {nuove_cat_assegnate} categorie sicure!")
-    print(f"Dataset finale pronto e salvato in:\n{updated_features_path}")
+    print(f"Aggiornate con successo {mask_features_amb.sum()} categorie sicure!")
+    print(f"Dataset finali pronti e salvati in:\n- {file_path}\n- {allegati_path}")
 
 else:
     print("\nNessun documento ambiguo trovato.")

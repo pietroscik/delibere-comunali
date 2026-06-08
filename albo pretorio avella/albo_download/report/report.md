@@ -5,16 +5,16 @@
 - PDF/documenti analizzati: 1530
 - Allegati parsed: 1530
 - Righe metadati: 1456
-- Parole medie per documento: 1306.9
-- Parole mediane per documento: 698.0
+- Parole medie per documento: 1301.8
+- Parole mediane per documento: 694.0
 - Documenti senza categoria: 2 (0.13%)
 - Classificazioni ambigue: 0 (0.0%)
 
 ## Priorita' Di Ottimizzazione
 
 - P1 `metadati_senza_tipologia`: 792/1456 (54.4%). Rigenerare metadati puliti o ricavare tipologia dagli allegati.
-- P1 `documenti_senza_importi`: 514/1530 (33.59%). Dato descrittivo: molti atti non devono contenere importi.
-- P2 `atti_contabili_senza_importi`: 174/1530 (11.37%). Priorita' reale: migliorare regex importi/OCR sui soli atti contabili.
+- P1 `documenti_senza_importi`: 515/1530 (33.66%). Dato descrittivo: molti atti non devono contenere importi.
+- P2 `atti_contabili_senza_importi`: 175/1530 (11.44%). Priorita' reale: migliorare regex importi/OCR sui soli atti contabili.
 - P3 `testi_troppo_corti`: 117/1530 (7.65%). Controllare OCR, PDF vuoti o allegati non deliberativi.
 - P3 `tipo_documento_unknown`: 35/1530 (2.29%). Migliorare inferenza tipo da filename/testo.
 - P3 `testi_duplicati`: 26/1530 (1.7%). Deduplicare corpus prima di training/embedding.
@@ -30,10 +30,19 @@
 
 ## Output Generati
 
-- `albo_download\report\quality_issues.csv`
-- `albo_download\report\category_distribution.csv`
-- `albo_download\report\category_numeric_profile.csv`
-- `albo_download\report\albo_exploration.xlsx`
+- `C:\Users\39329\OneDrive - Uniparthenope\delibere comunali\albo pretorio avella\albo_download\report\quality_issues.csv`
+- `C:\Users\39329\OneDrive - Uniparthenope\delibere comunali\albo pretorio avella\albo_download\report\category_distribution.csv`
+- `C:\Users\39329\OneDrive - Uniparthenope\delibere comunali\albo pretorio avella\albo_download\report\doc_type_distribution.csv`
+- `C:\Users\39329\OneDrive - Uniparthenope\delibere comunali\albo pretorio avella\albo_download\report\source_distribution.csv`
+- `C:\Users\39329\OneDrive - Uniparthenope\delibere comunali\albo pretorio avella\albo_download\report\confidence_distribution.csv`
+- `C:\Users\39329\OneDrive - Uniparthenope\delibere comunali\albo pretorio avella\albo_download\report\category_numeric_profile.csv`
+- `C:\Users\39329\OneDrive - Uniparthenope\delibere comunali\albo pretorio avella\albo_download\report\doctype_category_matrix.csv`
+- `C:\Users\39329\OneDrive - Uniparthenope\delibere comunali\albo pretorio avella\albo_download\report\short_text_documents.csv`
+- `C:\Users\39329\OneDrive - Uniparthenope\delibere comunali\albo pretorio avella\albo_download\report\long_text_documents.csv`
+- `C:\Users\39329\OneDrive - Uniparthenope\delibere comunali\albo pretorio avella\albo_download\report\top_importi.csv`
+- `C:\Users\39329\OneDrive - Uniparthenope\delibere comunali\albo pretorio avella\albo_download\report\ambiguous_documents.csv`
+- `C:\Users\39329\OneDrive - Uniparthenope\delibere comunali\albo pretorio avella\albo_download\report\uncategorized_documents.csv`
+- `C:\Users\39329\OneDrive - Uniparthenope\delibere comunali\albo pretorio avella\albo_download\report\albo_exploration.xlsx`
 
 ## Campione Corpus
 

@@ -146,7 +146,7 @@ def outliers(features):
     return rows
 
 
-def write_markdown(path, base, features, allegati, metadati, issues, corpus_sample):
+def write_markdown(path, base, features, allegati, metadati, issues, tables, outlier_tables, corpus_sample):
     lines = []
     lines.append("# Report Albo Pretorio Avella")
     lines.append("")
@@ -188,8 +188,10 @@ def write_markdown(path, base, features, allegati, metadati, issues, corpus_samp
     lines.append("## Output Generati")
     lines.append("")
     lines.append(f"- `{base / 'report' / 'quality_issues.csv'}`")
-    lines.append(f"- `{base / 'report' / 'category_distribution.csv'}`")
-    lines.append(f"- `{base / 'report' / 'category_numeric_profile.csv'}`")
+    for name in tables.keys():
+        lines.append(f"- `{base / 'report' / f'{name}.csv'}`")
+    for name in outlier_tables.keys():
+        lines.append(f"- `{base / 'report' / f'{name}.csv'}`")
     lines.append(f"- `{base / 'report' / 'albo_exploration.xlsx'}`")
     lines.append("")
 
@@ -239,7 +241,7 @@ def main():
         xlsx_path = None
         print("[WARN] xlsxwriter non installato: report Excel saltato, CSV e Markdown salvati.")
 
-    write_markdown(report_dir / "report.md", base, features, allegati, metadati, issues, corpus_sample)
+    write_markdown(report_dir / "report.md", base, features, allegati, metadati, issues, tables, outlier_tables, corpus_sample)
 
     print(f"[OK] Report salvato in: {report_dir}")
     print(f"- {report_dir / 'report.md'}")

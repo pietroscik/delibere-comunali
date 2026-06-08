@@ -116,6 +116,10 @@ def main() -> None:
     if (base / "albo_analisi.xlsx").exists():
         run_step(verify_cmd, "Verify Excel outputs", SCRIPT_DIR)
 
+    explore_cmd = [args.python, "explore_albo.py", "--base", str(base)]
+    if (base / "documenti_features.csv").exists():
+        run_step(explore_cmd, "Generate exploration reports", SCRIPT_DIR)
+
     print("\nPipeline completed successfully.")
 
 

@@ -1,3 +1,3 @@
-pdf_name,doc_type,category,subcategory,classification_confidence,source,text_sha256,text_chars,text_words,unique_words,euro_mentions,cig,cup,cig_mentions,cup_mentions,date_mentions,years_mentioned,importo_max,importo_sum,importi_count,accounting_relevant,missing_amount_expected,piva_beneficiario,iban,codice_appalti,quadro_economico
-atto_2672000__Vai_2.php,unknown,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,,,0,0,0,,,,0,False,False,,,,
-atto_46__Vai_1.php,unknown,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,,,0,0,0,,,,0,False,False,,,,
+pdf_name,doc_type,category,subcategory,classification_confidence,source,text_sha256,text_chars,text_words,unique_words,euro_mentions,cig,cup,cig_mentions,cup_mentions,date_mentions,years_mentioned,importo_max,importo_sum,importi_count,accounting_relevant,missing_amount_expected,importo_lettere,piva_beneficiario,iban,codice_appalti,quadro_economico,anomalie
+atto_2672000__Vai_2.php,unknown,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,,,0,0,0,,,,0,False,False,,,,,,
+atto_46__Vai_1.php,unknown,,,,text,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,0,0,0,0,,,0,0,0,,,,0,False,False,,,,,,

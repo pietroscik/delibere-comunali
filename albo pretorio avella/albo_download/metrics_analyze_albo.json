@@ -1,8 +1,8 @@
 {
-  "exported_at": "2026-06-08T18:23:50.518237",
-  "session_start": 1780935820.1675277,
+  "exported_at": "2026-06-08T19:47:51.350400",
+  "session_start": 1780940858.8707657,
   "summary": {
-    "session_duration": 10.350709915161133,
+    "session_duration": 12.479635238647461,
     "total_operations": 1,
     "total_metric_points": 4,
     "counters": {
@@ -13,10 +13,10 @@
     "operation_statistics": {
       "analisi_pdf": {
         "count": 1,
-        "total_duration": 0.3351600170135498,
+        "total_duration": 2.4898810386657715,
         "successes": 1,
         "failures": 0,
-        "avg_duration": 0.3351600170135498,
+        "avg_duration": 2.4898810386657715,
         "success_rate": 1.0
       }
     }
@@ -24,14 +24,14 @@
   "recent_operations": [
     {
       "operation_name": "analisi_pdf",
-      "start_time": 1780935824.2705007,
-      "end_time": 1780935824.6056607,
-      "duration": 0.3351600170135498,
+      "start_time": 1780940862.7450001,
+      "end_time": 1780940865.2348812,
+      "duration": 2.4898810386657715,
       "success": true,
       "error_type": null,
       "items_processed": 1530,
       "bytes_processed": 0,
-      "throughput": 4564.983656562308,
+      "throughput": 614.4871888417072,
       "custom_metrics": {}
     }
   ],
@@ -39,25 +39,25 @@
     {
       "name": "counter.operations.success",
       "value": 1,
-      "timestamp": 1780935824.6056607,
+      "timestamp": 1780940865.2348812,
       "tags": {}
     },
     {
       "name": "counter.operations.total",
       "value": 1,
-      "timestamp": 1780935824.6056607,
+      "timestamp": 1780940865.2348812,
       "tags": {}
     },
     {
       "name": "operation.duration.analisi_pdf",
-      "value": 0.3351600170135498,
-      "timestamp": 1780935824.6056607,
+      "value": 2.4898810386657715,
+      "timestamp": 1780940865.2348812,
       "tags": {}
     },
     {
       "name": "operation.throughput.analisi_pdf",
-      "value": 4564.983656562308,
-      "timestamp": 1780935824.6056607,
+      "value": 614.4871888417072,
+      "timestamp": 1780940865.2348812,
       "tags": {}
     }
   ]
