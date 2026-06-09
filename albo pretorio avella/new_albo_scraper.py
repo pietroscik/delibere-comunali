@@ -93,18 +93,58 @@ def looks_like_attachment(href: str, label: str = "") -> bool:
         return True
     return any(word in text for word in ("allegato", "documento", "pdf", "download", "vai"))
 
-def infer_type(text: str) -> Optional[str]:
-    t = (text or "").lower()
-    rules = [
-        ("Determinazione", ("determina", "determinazione")),
-        ("Delibera", ("delibera", "deliberazione")),
-        ("Ordinanza", ("ordinanza",)),
-        ("Avviso", ("avviso",)),
-        ("Bando", ("bando",)),
-    ]
-    for label, needles in rules:
-        if any(n in t for n in needles):
-            return label
+# Dizionario per inferire tipologia da filename
+TIPOLOGIA_FROM_FILENAME = {
+    r"Determina": "Determinazione",
+    r"Delibera": "Delibera",
+    r"Ordinanza": "Ordinanza",
+    r"Decreto": "Decreto",
+    r"Avviso": "Avviso",
+    r"Bando": "Bando",
+    r"Attestazione": "AttestazionePubblicazione",
+    r"VistoContabile": "VistoContabile",
+}
+
+# Dizionario per inferire tipologia da oggetto
+TIPOLOGIA_FROM_OGGETTO = {
+    r"determina": "Determinazione",
+    r"delibera": "Delibera",
+    r"ordinanza": "Ordinanza",
+    r"decreto": "Decreto",
+    r"avviso": "Avviso",
+    r"bando": "Bando",
+    r"attestazione.*pubblicazione": "AttestazionePubblicazione",
+    r"visto.*contabile": "VistoContabile",
+    r"liquidazione": "Determinazione",  # Spesso in Determinazioni
+    r"impegno": "Determinazione",
+}
+
+def infer_tipologia_from_filename(filename: str) -> Optional[str]:
+    """Inferisce tipologia dal nome del file"""
+    for pattern, tipologia in TIPOLOGIA_FROM_FILENAME.items():
+        if re.search(pattern, filename, re.IGNORECASE):
+            return tipologia
+    return None
+
+def infer_tipologia_from_oggetto(oggetto: str) -> Optional[str]:
+    """Inferisce tipologia dall'oggetto del documento"""
+    if not oggetto:
+        return None
+    oggetto_lower = oggetto.lower()
+    for pattern, tipologia in TIPOLOGIA_FROM_OGGETTO.items():
+        if re.search(pattern, oggetto_lower):
+            return tipologia
+    return None
+
+def infer_tipologia_from_url(url: str) -> Optional[str]:
+    """Inferisce tipologia dall'URL (es. parametri o path)"""
+    if not url: return None
+    if "Determina" in url or "determinazione" in url.lower():
+        return "Determinazione"
+    if "Delibera" in url or "deliberazione" in url.lower():
+        return "Delibera"
+    if "Ordinanza" in url or "ordinanza" in url.lower():
+        return "Ordinanza"
     return None
 
 def infer_number(text: str) -> Optional[str]:
@@ -266,16 +306,34 @@ def parse_list_page(html: str, base_url: str) -> Tuple[List[AlboItem], Optional[
         text = " ".join((a.get_text() or "").split())
         row_text = " ".join((r.get_text(separator=" | ") or "").split())
 
+        # 1. Prova a estrarre la tipologia dalla struttura HTML (CSS Selector fallback)
+        tipologia_estratta = None
+        tds = r.find_all("td")
+        if len(tds) >= 4:
+            # La tipologia in OpenWeb potrebbe trovarsi nella quarta colonna
+            tip_text = tds[3].get_text(strip=True)
+            if tip_text and tip_text not in ["", "| Ufficio", "N.D.", "Non specificato"]:
+                tipologia_estratta = tip_text
+                
         m_num = NUM_RX.search(row_text)
         m_data = DATA_RX.search(row_text)
         m_tip = TIPO_RX.search(row_text)
+
+        # 2. Fallback da URL
+        if not tipologia_estratta:
+            tipologia_estratta = infer_tipologia_from_url(href)
+
+        # 3. Fallback alla regex sulla riga testuale
+        if not tipologia_estratta and m_tip:
+            tip_val = m_tip.group(1).capitalize()
+            tipologia_estratta = "Determinazione" if tip_val == "Determina" else tip_val
 
         item = AlboItem(
             page_url=base_url,
             titolo=text or "Senza titolo",
             numero=m_num.group(2) if m_num else None,
             data_pubblicazione=m_data.group(2) if m_data else None,
-            tipologia=(m_tip.group(1).capitalize() if m_tip else None),
+            tipologia=tipologia_estratta,
             ufficio=None,
             oggetto=None,
             dettaglio_url=href,
@@ -525,8 +583,20 @@ class AlboScraper:
 
     def enrich_item(self, it: AlboItem) -> None:
         source = " ".join([it.titolo or "", it.oggetto or "", " ".join(url_doc_name(u) for u in it.allegati)])
-        if not it.tipologia:
-            it.tipologia = infer_type(source)
+        # Fallback finale per la tipologia (gerarchia complessa)
+        if not it.tipologia or it.tipologia in ("Altro", "| Ufficio", "N.D.", "Non specificato"):
+            # 1. Da filename allegati
+            for u in it.allegati:
+                inferred = infer_tipologia_from_filename(url_doc_name(u))
+                if inferred:
+                    it.tipologia = inferred
+                    break
+            
+            # 2. Da oggetto
+            if not it.tipologia or it.tipologia in ("Altro", "| Ufficio", "N.D.", "Non specificato"):
+                inferred = infer_tipologia_from_oggetto(it.oggetto or it.titolo)
+                it.tipologia = inferred if inferred else "Altro"
+
         if not it.numero:
             it.numero = infer_number(source)
         if not it.data_pubblicazione:

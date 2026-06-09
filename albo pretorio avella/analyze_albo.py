@@ -18,7 +18,7 @@ import sys
 import shutil
 import time
 import subprocess
-from typing import Optional
+from typing import Optional, List
 from pathlib import Path
 from datetime import datetime
 
@@ -60,6 +60,11 @@ try:
     from google import genai
 except ModuleNotFoundError:
     genai = None
+
+try:
+    from word2number import w2n
+except ImportError:
+    w2n = None
 
 # Inizializza l'estrattore avanzato globale
 advanced_extractor = DelibereExtractor() if DelibereExtractor else None
@@ -225,10 +230,44 @@ RX_SKIP_PATTERNS = {
     'commission': re.compile(r'\b(nomina.*commissione|costituzione.*commissione)\b', re.I),
 }
 
-# Regex per trovare l'importo
-RX_EURO = re.compile(r'€\s*([\d\.,]+)')
-RX_EURO_FALLBACK = re.compile(r'euro\s*([\d\.,]+)', re.IGNORECASE)
-RX_AMOUNT_LOOSE = re.compile(r'(?:importo|totale|spesa complessiva|impegno di spesa|per\s+un\s+importo\s+di)\s+€?\s*([\d\.,]+)', re.IGNORECASE)
+def lettere_to_numero(testo: str) -> Optional[float]:
+    """Converte testo in lettere in numero usando word2number."""
+    if w2n is None or not testo:
+        return None
+
+    testo = testo.strip().lower()
+    testo = re.sub(r"[^\w\s/]", "", testo)
+
+    if "/" in testo:
+        parti = testo.split("/")
+        if len(parti) == 2:
+            parte_lettere = parti[0].strip()
+            parte_decimali = parti[1].strip()
+            try:
+                numero = w2n.word_to_num(parte_lettere)
+                decimali = float(parte_decimali) / 100
+                return float(numero + decimali)
+            except:
+                pass
+    try:
+        return float(w2n.word_to_num(testo))
+    except:
+        pass
+    return None
+
+# Pattern aggiornati per importi
+IMPORTI_REGEX = [
+    r"€\s*[\d.,]+",
+    r"[\d.,]+\s*(euro|€|EUR)",
+    r"importo\s*(totale|complessivo|di\s+spesa|a\s+base\s+d[’']asta)\s*[:=]?\s*[\d.,]+",
+    r"(impegno|liquidazione|accredito|pagamento)\s+(n\.?\s*\d+\s*)?[\d.,]+",
+    r"CIG\s+[A-Z0-9]+\s*[:\-]?\s*[\d.,]+",
+    r"CUP\s+[A-Z0-9]+\s*[:\-]?\s*[\d.,]+",
+    r"IVA\s+(inclusa|esclusa)\s*[\d.,]+",
+    r"\b\d{1,3}/\d{2}\b",
+    r"\b(uno|due|tre|quattro|cinque|sei|sette|otto|nove|dieci|undici|dodici|tredici|quattordici|quindici|sedici|diciassette|diciotto|diciannove|venti|trenta|quaranta|cinquanta|sessanta|settanta|ottanta|novanta|cento|mille|milione|miliardo)\s+(euro|€|EUR)\b",
+    r"\b(uno|due|tre|quattro|cinque|sei|sette|otto|nove|dieci|undici|dodici|tredici|quattordici|quindici|sedici|diciassette|diciotto|diciannove|venti|trenta|quaranta|cinquanta|sessanta|settanta|ottanta|novanta|cento|mille|milione|miliardo)\s*/\d{2}\b",
+]
 
 # Regex per CIG e CUP (Migliorate per intercettare C.I.G., spaziature, ecc.)
 RX_CIG = re.compile(r'\bC\.?I\.?G\.?(?:\s*(?:n\.|numero|codice)?\s*[:\-]?\s*)([A-Z0-9]{10})\b', re.IGNORECASE)
@@ -254,6 +293,7 @@ RX_IMPEGNO = re.compile(r'(?:impegno|impegno\s+n\.|N\.\s+Impegno\s+Definitivo)\s
 RX_ACCERT = re.compile(r'(?:accertamento|accertamento\s+n\.|N\.\s+Accertamento)\s*[:\s]*(\d+)', re.IGNORECASE)
 RX_CAPITOLO = re.compile(r'(?:capitolo|Capitolo\s+Quinti\s+Livello)\s*[:\s]*([\d\.]+)', re.IGNORECASE)
 RX_PEG     = re.compile(r"\b(PEG|missione|programma)\b[^\n\r]*", re.I)
+RX_IBAN    = re.compile(r'\bIT\s*\d{2}\s*[A-Z]\s*\d{5}\s*\d{5}\s*[0-9A-Z]{12}\b', re.IGNORECASE)
 
 # --- Classification Rules ---
 CATEGORY_RULES = {
@@ -300,6 +340,30 @@ def normalize_amount(txt):
         return float(s)
     except Exception:
         return None
+
+def extract_importi(text: str) -> List[float]:
+    """Estrae tutti gli importi (numerici e in lettere) da un testo"""
+    importi = set()
+    
+    for pattern in IMPORTI_REGEX[:8]:
+        matches = re.findall(pattern, text, re.IGNORECASE)
+        for match in matches:
+            importo_clean = re.sub(r"[^\d,]", "", str(match))
+            if importo_clean:
+                try:
+                    importo_float = float(importo_clean.replace(",", "."))
+                    if 0 < importo_float < 100_000_000:
+                        importi.add(importo_float)
+                except: pass
+                
+    for pattern in IMPORTI_REGEX[8:]:
+        matches = re.findall(pattern, text, re.IGNORECASE)
+        for match in matches:
+            testo_importo = match[0] if isinstance(match, tuple) else match
+            numero = lettere_to_numero(testo_importo)
+            if numero: importi.add(numero)
+            
+    return sorted(importi, reverse=True)
 
 def keyword_hits(haystack, keywords):
     hits = []
@@ -661,24 +725,16 @@ def extract_from_pdf(path: Path, use_llm: bool = False, rf_model=None, text_dir:
     out["accounting_relevant"] = is_accounting_relevant(text_one, out["doc_type"], out["category"])
 
     # --- importi ---
-    if llm_data.get("importi_raw"):
-        amts = llm_data["importi_raw"]
-    else:
-        amts = []
-        for m in RX_EURO.finditer(text_one):
-            amts.append(m.group(1))
-        for m in RX_AMOUNT_LOOSE.finditer(text_one): 
-            amts.append(m.group(1))
-        for m in RX_EURO_FALLBACK.finditer(text_one):
-            amts.append(m.group(1))
-    # (opzionale) cattura importi SENZA simbolo € quando preceduti da parole chiave
-    
     amts_norm = []
-    for amount_raw in amts:
-        normalized = normalize_amount(amount_raw)
-        if normalized is not None:
-            amts_norm.append(normalized)
-    out["importi_raw"] = amts
+    if llm_data.get("importi_raw"):
+        for amount_raw in llm_data["importi_raw"]:
+            normalized = normalize_amount(amount_raw)
+            if normalized is not None:
+                amts_norm.append(normalized)
+    else:
+        amts_norm = extract_importi(text_one)
+        
+    out["importi_raw"] = [str(a) for a in amts_norm]
     
     # Se l'estrattore avanzato trova un importo, diamogli priorità
     out["importo_max"] = adv_data.get("importo_max_estratto") or (max(amts_norm) if amts_norm else None)
@@ -726,7 +782,14 @@ def extract_from_pdf(path: Path, use_llm: bool = False, rf_model=None, text_dir:
                     break
     
     out["piva_beneficiario"] = adv_data.get("piva_beneficiario")
-    out["iban"] = adv_data.get("iban_estratto")
+    
+    iban_estratto = adv_data.get("iban_estratto")
+    if not iban_estratto:
+        m_iban = RX_IBAN.search(text_one)
+        if m_iban:
+            iban_estratto = re.sub(r'\s+', '', m_iban.group(0)).upper()
+    out["iban"] = iban_estratto
+    
     out["codice_appalti"] = adv_data.get("codice_appalti")
     out["importo_lettere"] = adv_data.get("importo_lettere")
     out["anomalie"] = adv_data.get("anomalie_rilevate")
