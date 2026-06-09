@@ -353,8 +353,6 @@ def parse_list_page(html: str, base_url: str) -> Tuple[List[AlboItem], Optional[
         txt = (a.get_text() or "").strip()
         if txt in (">", "»", ">>") and a.get("href"):
             return items, up.urljoin(base_url, a["href"])
-
-    # fallback
     return items, guess_next_url(base_url)
 
 def parse_detail_page(html: str, base_url: str) -> Tuple[Optional[str], Optional[str], List[str]]:
