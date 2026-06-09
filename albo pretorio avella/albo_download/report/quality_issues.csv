@@ -1,10 +1,10 @@
 issue,count,total,percent,priority,recommendation
 metadati_senza_tipologia,792,1456,54.4,1,Rigenerare metadati puliti o ricavare tipologia dagli allegati.
-documenti_senza_importi,515,1530,33.66,1,Dato descrittivo: molti atti non devono contenere importi.
-atti_contabili_senza_importi,175,1530,11.44,2,Priorita' reale: migliorare regex importi/OCR sui soli atti contabili.
-testi_troppo_corti,117,1530,7.65,3,"Controllare OCR, PDF vuoti o allegati non deliberativi."
-tipo_documento_unknown,35,1530,2.29,3,Migliorare inferenza tipo da filename/testo.
-testi_duplicati,26,1530,1.7,3,Deduplicare corpus prima di training/embedding.
-documenti_senza_categoria,2,1530,0.13,3,Ampliare dizionario categorie o passare a classificazione supervisionata.
-classificazioni_ambigue,0,1530,0.0,4,Revisionare manualmente e usare come validation set.
+documenti_senza_importi,479,1503,31.87,1,Dato descrittivo: molti atti non devono contenere importi.
+atti_contabili_senza_importi,148,1503,9.85,3,Priorita' reale: migliorare regex importi/OCR sui soli atti contabili.
+testi_troppo_corti,110,1503,7.32,3,"Controllare OCR, PDF vuoti o allegati non deliberativi."
+documenti_senza_categoria,53,1503,3.53,3,Ampliare dizionario categorie o passare a classificazione supervisionata.
+classificazioni_ambigue,52,1503,3.46,3,Revisionare manualmente e usare come validation set.
+tipo_documento_unknown,32,1503,2.13,3,Migliorare inferenza tipo da filename/testo.
+testi_duplicati,0,1503,0.0,4,Deduplicare corpus prima di training/embedding.
 metadati_dettaglio_duplicato,0,1456,0.0,4,Ripulire CSV storico e usare solo righe deduplicate.

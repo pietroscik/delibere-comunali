@@ -1,8 +1,8 @@
 {
-  "exported_at": "2026-06-08T19:47:51.350400",
-  "session_start": 1780940858.8707657,
+  "exported_at": "2026-06-09T12:16:59.821818",
+  "session_start": 1781000083.6103694,
   "summary": {
-    "session_duration": 12.479635238647461,
+    "session_duration": 136.2114613056183,
     "total_operations": 1,
     "total_metric_points": 4,
     "counters": {
@@ -13,10 +13,10 @@
     "operation_statistics": {
       "analisi_pdf": {
         "count": 1,
-        "total_duration": 2.4898810386657715,
+        "total_duration": 122.7562484741211,
         "successes": 1,
         "failures": 0,
-        "avg_duration": 2.4898810386657715,
+        "avg_duration": 122.7562484741211,
         "success_rate": 1.0
       }
     }
@@ -24,14 +24,14 @@
   "recent_operations": [
     {
       "operation_name": "analisi_pdf",
-      "start_time": 1780940862.7450001,
-      "end_time": 1780940865.2348812,
-      "duration": 2.4898810386657715,
+      "start_time": 1781000091.0735989,
+      "end_time": 1781000213.8298473,
+      "duration": 122.7562484741211,
       "success": true,
       "error_type": null,
       "items_processed": 1530,
       "bytes_processed": 0,
-      "throughput": 614.4871888417072,
+      "throughput": 12.463723997907508,
       "custom_metrics": {}
     }
   ],
@@ -39,25 +39,25 @@
     {
       "name": "counter.operations.success",
       "value": 1,
-      "timestamp": 1780940865.2348812,
+      "timestamp": 1781000213.8299608,
       "tags": {}
     },
     {
       "name": "counter.operations.total",
       "value": 1,
-      "timestamp": 1780940865.2348812,
+      "timestamp": 1781000213.8299892,
       "tags": {}
     },
     {
       "name": "operation.duration.analisi_pdf",
-      "value": 2.4898810386657715,
-      "timestamp": 1780940865.2348812,
+      "value": 122.7562484741211,
+      "timestamp": 1781000213.8299944,
       "tags": {}
     },
     {
       "name": "operation.throughput.analisi_pdf",
-      "value": 614.4871888417072,
-      "timestamp": 1780940865.2348812,
+      "value": 12.463723997907508,
+      "timestamp": 1781000213.8300211,
       "tags": {}
     }
   ]

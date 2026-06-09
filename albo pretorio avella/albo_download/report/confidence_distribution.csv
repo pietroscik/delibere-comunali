@@ -1,4 +1,6 @@
 classification_confidence,count
-high,1217
-ml_predicted,311
-<vuoto>,2
+high,1221
+ml_predicted,150
+<vuoto>,53
+ambiguous,52
+high_ml,27

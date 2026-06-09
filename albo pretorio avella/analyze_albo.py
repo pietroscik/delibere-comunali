@@ -21,7 +21,6 @@ import subprocess
 from typing import Optional
 from pathlib import Path
 from datetime import datetime
-from p7m_extractor import extract_p7m
 
 import pandas as pd
 import numpy as np
@@ -126,10 +125,28 @@ def _render_pdfium_images(pdf_input, dpi=300, max_pages=None):
 
 def _enhance_image_for_ocr(img):
     """Migliora il contrasto e converte in scala di grigi per aiutare Tesseract sui file sgranati."""
-    from PIL import ImageEnhance, ImageOps
-    img = ImageOps.grayscale(img)
-    img = ImageEnhance.Contrast(img).enhance(2.0)
-    return img
+    try:
+        import cv2
+        import numpy as np
+        from PIL import Image
+        
+        cv_img = np.array(img)
+        if len(cv_img.shape) == 3:
+            gray = cv2.cvtColor(cv_img, cv2.COLOR_RGB2GRAY)
+        else:
+            gray = cv_img
+            
+        _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        denoised = cv2.fastNlMeansDenoising(thresh, h=10)
+        
+        return Image.fromarray(denoised)
+        
+    except ImportError:
+        # Fallback a PIL se OpenCV non è installato
+        from PIL import ImageEnhance, ImageOps
+        img = ImageOps.grayscale(img)
+        img = ImageEnhance.Contrast(img).enhance(2.0)
+        return img
 
 def ocr_pdf_probe(pdf_input, dpi=300, pages=(1,2)):
     if pytesseract is None:
@@ -171,6 +188,33 @@ def ocr_pdf_full(pdf_input, dpi=300, max_pages=None):
     return " ".join(" ".join(parts).split())
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+
+# -------- Boilerplate --------
+BOILERPLATE_PATTERNS = [
+    re.compile(r"COPIA\s+Piazza Municipio.*?\n", re.IGNORECASE),
+    re.compile(r"Comune di Avella.*?\n", re.IGNORECASE),
+    re.compile(r"Albo Pretorio Online.*?\n", re.IGNORECASE),
+    re.compile(r"Pubblicato il \d{2}/\d{2}/\d{4}.*?\n", re.IGNORECASE),
+    re.compile(r"IL RESPONSABILE DEL SERVIZIO.*?\n", re.IGNORECASE),
+    re.compile(r"IL SINDACO.*?\n", re.IGNORECASE),
+    re.compile(r"Firmato digitalmente.*?\n", re.IGNORECASE),
+    re.compile(r"PARERE DI REGOLARITÀ TECNICA.*?\n", re.IGNORECASE),
+    re.compile(r"ATTESTAZIONE DI PUBBLICAZIONE.*?\n", re.IGNORECASE),
+    re.compile(r"---+\s*$", re.MULTILINE),
+    re.compile(r"===\s*$", re.MULTILINE),
+    re.compile(r"\*+\s*$", re.MULTILINE),
+    re.compile(r"Pag\. \d+ di \d+", re.IGNORECASE),
+]
+
+def remove_boilerplate(text):
+    """Rimuove il boilerplate dal testo."""
+    if not text:
+        return text
+    for pattern in BOILERPLATE_PATTERNS:
+        text = pattern.sub("", text)
+    text = re.sub(r'\n\s*\n', '\n\n', text)
+    text = re.sub(r'[ \t]+', ' ', text)
+    return text.strip()
 
 # -------- Regex utili --------
 # Regex per documenti da saltare
@@ -572,6 +616,7 @@ def extract_from_pdf(path: Path, use_llm: bool = False, rf_model=None, text_dir:
                     text_one = full_txt
                     out["source"] = "ocr"
 
+    text_one = remove_boilerplate(text_one)
     text_one = normalize_text_for_ml(text_one)
     out["_text"] = text_one
     out["text_sha256"] = hashlib.sha256(text_one.encode("utf-8", errors="ignore")).hexdigest()
@@ -832,6 +877,8 @@ def main():
     corpus_rows = []
     
     with metrics.start_operation("analisi_pdf") as op:
+        seen_hashes = set()
+        
         for idx, pdf_file in enumerate(files):
             if idx % 10 == 0:
                 logger.info(f"Processando {idx}/{len(files)}...")
@@ -847,6 +894,12 @@ def main():
                     info["classification_confidence"] = conf
                     info["classification_terms"] = terms
                     
+                # Deduplicazione documenti in cache
+                text_hash = info.get("text_sha256")
+                if text_hash and text_hash in seen_hashes:
+                    continue
+                seen_hashes.add(text_hash)
+
                 info["pdf_name"] = pdf_file.name # Ripristiniamo la chiave
                 parsed_pdfs.append(info)
                 
@@ -863,6 +916,13 @@ def main():
                 continue
                 
             info = extract_from_pdf(pdf_file, use_llm=args.use_llm, rf_model=rf_model)
+            
+            # Deduplicazione documenti appena estratti
+            text_hash = info.get("text_sha256")
+            if text_hash and text_hash in seen_hashes:
+                continue
+            seen_hashes.add(text_hash)
+
             text_full = info.pop("_text", "")
             text_name = pdf_file.stem + ".txt"
             text_path = text_dir / text_name

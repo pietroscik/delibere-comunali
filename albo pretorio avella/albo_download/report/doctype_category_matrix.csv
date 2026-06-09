@@ -1,11 +1,11 @@
 doc_type,<vuoto>,Affari Generali,Ambiente,Commercio,Contabilità,Contenzioso,Cultura e Turismo,Lavori Pubblici,Personale,Pubblicazione e Trasparenza,Regolamenti,Servizi Demografici,Servizi Sociali,Urbanistica
-AttestazionePubblicazione,0,0,0,3,4,23,0,0,3,42,43,2,3,1
-Avviso,0,1,2,0,12,0,4,2,4,0,8,22,2,0
-Bando,0,1,0,0,2,0,1,0,0,0,4,0,0,2
-Decreto,0,5,4,0,22,6,2,0,6,4,11,6,1,0
-Delibera,0,3,5,5,33,25,6,5,12,8,74,3,21,1
-Determinazione,0,15,35,0,307,20,24,13,19,1,54,11,9,4
-Elenco,0,0,0,0,7,0,0,0,0,0,0,3,0,0
-Ordinanza,0,6,4,0,2,24,0,0,1,1,2,0,1,0
-VistoContabile,0,0,0,0,472,1,0,0,0,0,0,0,0,0
-unknown,2,1,1,0,11,1,0,0,0,0,5,10,4,0
+AttestazionePubblicazione,0,0,0,2,4,24,0,0,3,45,42,2,1,1
+Avviso,1,4,2,0,4,1,4,2,4,0,5,23,2,6
+Bando,2,1,1,0,0,0,3,0,0,0,1,0,0,2
+Decreto,2,3,5,0,17,9,2,0,6,5,8,9,1,0
+Delibera,5,10,4,2,23,26,9,7,10,7,57,4,18,1
+Determinazione,25,26,26,0,270,22,29,15,21,1,44,11,9,12
+Elenco,1,0,0,0,6,0,0,0,0,0,0,3,0,0
+Ordinanza,7,5,4,1,2,18,0,1,0,1,1,0,1,0
+VistoContabile,0,0,0,0,467,0,0,0,0,0,0,0,0,0
+unknown,10,2,1,0,4,1,0,0,0,0,2,8,4,0
