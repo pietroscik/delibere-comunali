@@ -54,8 +54,7 @@ from urllib.robotparser import RobotFileParser
 DEFAULT_DELAY = 1.0
 DEFAULT_MAX_PAGES = 20
 DEFAULT_TIMEOUT = 20
-DEFAULT_USER_AGENT = "CivicResearchBot/1.1 (+contatto: tua-pec-o-email)"
-
+DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 OPENWEB_BASE = "https://servizi.comune.avella.av.it/openweb/albo/albo_pretorio_full.php"
 
 ATTACH_EXTS = (".pdf", ".doc", ".docx", ".rtf", ".zip")
@@ -303,44 +302,69 @@ def parse_list_page(html: str, base_url: str) -> Tuple[List[AlboItem], Optional[
         if not a:
             continue
         href = up.urljoin(base_url, a["href"])
-        text = " ".join((a.get_text() or "").split())
-        row_text = " ".join((r.get_text(separator=" | ") or "").split())
-
-        # 1. Prova a estrarre la tipologia dalla struttura HTML (CSS Selector fallback)
-        tipologia_estratta = None
+        
+        # Scorporiamo la riga nelle sue celle (<td>)
         tds = r.find_all("td")
+        
+        titolo_val = ""
+        oggetto_val = ""
+        ufficio_val = ""
+        numero_val = None
+        data_val = None
+        tipologia_val = None
+
         if len(tds) >= 4:
-            # La tipologia in OpenWeb potrebbe trovarsi nella quarta colonna
-            tip_text = tds[3].get_text(strip=True)
-            if tip_text and tip_text not in ["", "| Ufficio", "N.D.", "Non specificato"]:
-                tipologia_estratta = tip_text
+            # Estraiamo il testo pulito da ogni colonna
+            colonne = [td.get_text(separator=" ", strip=True) for td in tds]
+            row_text = " ".join(colonne)
+            
+            # 1. L'Oggetto è quasi sempre la colonna con più testo
+            oggetto_val = max(colonne, key=len)
+            titolo_val = oggetto_val[:150] + ("..." if len(oggetto_val) > 150 else "")
+            
+            # 2. Pulizia dell'Ufficio
+            for col in colonne:
+                if "Ufficio" in col or "Area" in col or "Settore" in col:
+                    ufficio_val = col.replace("|", "").strip()
+                    break
+                    
+            # 3. Estrazione Data (cerchiamo formato GG/MM/AAAA)
+            m_data = DATA_RX.search(row_text) or re.search(r"\b(\d{2}/\d{2}/\d{4})\b", row_text)
+            if m_data:
+                data_val = m_data.group(1) if len(m_data.groups()) == 1 else m_data.group(2)
                 
-        m_num = NUM_RX.search(row_text)
-        m_data = DATA_RX.search(row_text)
-        m_tip = TIPO_RX.search(row_text)
+            # 4. Estrazione Numero (cerchiamo es. "123 / 2025" o "N. 123")
+            m_num = re.search(r"\b(\d+)\s*/\s*20\d{2}\b", row_text) or NUM_RX.search(row_text)
+            if m_num:
+                numero_val = m_num.group(1) if len(m_num.groups()) == 1 else m_num.group(2)
+                
+            # 5. Tipologia
+            tipologia_val = infer_tipologia_from_url(href)
+            if not tipologia_val:
+                m_tip = TIPO_RX.search(row_text)
+                if m_tip:
+                    tip_val = m_tip.group(1).capitalize()
+                    tipologia_val = "Determinazione" if tip_val == "Determina" else tip_val
+        else:
+            # Fallback per righe anomale senza colonne standard
+            row_text = " ".join((r.get_text(separator=" | ") or "").split())
+            oggetto_val = re.sub(r"\bVai\b", "", row_text, flags=re.I).strip(" |")
+            titolo_val = oggetto_val[:150]
 
-        # 2. Fallback da URL
-        if not tipologia_estratta:
-            tipologia_estratta = infer_tipologia_from_url(href)
-
-        # 3. Fallback alla regex sulla riga testuale
-        if not tipologia_estratta and m_tip:
-            tip_val = m_tip.group(1).capitalize()
-            tipologia_estratta = "Determinazione" if tip_val == "Determina" else tip_val
-
+        # Creiamo il record pulito
         item = AlboItem(
             page_url=base_url,
-            titolo=text or "Senza titolo",
-            numero=m_num.group(2) if m_num else None,
-            data_pubblicazione=m_data.group(2) if m_data else None,
-            tipologia=tipologia_estratta,
-            ufficio=None,
-            oggetto=None,
+            titolo=titolo_val if titolo_val else "Senza titolo",
+            numero=numero_val,
+            data_pubblicazione=data_val,
+            tipologia=tipologia_val,
+            ufficio=ufficio_val,
+            oggetto=oggetto_val,
             dettaglio_url=href,
         )
         items.append(item)
 
-    # Link "successivo" o rel=next
+    # Link "successivo" per la paginazione
     a_next = soup.find("a", rel=lambda v: v and "next" in v.lower())
     if a_next and a_next.get("href"):
         return items, up.urljoin(base_url, a_next["href"])
@@ -353,6 +377,7 @@ def parse_list_page(html: str, base_url: str) -> Tuple[List[AlboItem], Optional[
         txt = (a.get_text() or "").strip()
         if txt in (">", "»", ">>") and a.get("href"):
             return items, up.urljoin(base_url, a["href"])
+
     return items, guess_next_url(base_url)
 
 def parse_detail_page(html: str, base_url: str) -> Tuple[Optional[str], Optional[str], List[str]]:

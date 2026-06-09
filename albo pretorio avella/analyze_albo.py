@@ -943,8 +943,7 @@ def main():
         seen_hashes = set()
         
         for idx, pdf_file in enumerate(files):
-            if idx % 10 == 0:
-                logger.info(f"Processando {idx}/{len(files)}...")
+            logger.info(f"Processando {idx + 1}/{len(files)}: {pdf_file.name}")
                 
             if pdf_file.name in processed_cache:
                 info = processed_cache[pdf_file.name]
