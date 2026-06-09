@@ -21,6 +21,7 @@ import subprocess
 from typing import Optional
 from pathlib import Path
 from datetime import datetime
+from p7m_extractor import extract_p7m
 
 import pandas as pd
 import numpy as np
@@ -32,6 +33,9 @@ from dotenv import load_dotenv
 from logger import get_logger
 from metrics import get_metrics_collector
 
+import pytesseract
+# Imposta il percorso di Tesseract (solo per Windows)
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 logger = get_logger("analyze_albo")
 metrics = get_metrics_collector()
 

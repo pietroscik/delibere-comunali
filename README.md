@@ -124,7 +124,6 @@ python3 -m streamlit run rag_app.py
 - `albo_download/allegati_parsed.csv`: estrazioni per documento.
 - `albo_download/atti_parsed.csv`: estrazioni raggruppate per atto (collassando allegati multipli).
 - `albo_download/documenti_features.csv`: feature estratte per il machine learning.
-- `albo_download/documenti_features_updated.csv`: feature aggiornate in seguito alla riclassificazione ML.
 - `albo_download/documenti_riclassificati.csv`: documenti ambigui risolti e classificati dal modello ML.
 - `albo_download/documenti_corpus.jsonl`: corpus RAG / Addestramento LLM in formato JSONL.
 - `albo_download/failed_extractions.csv`: tracking dei file falliti o con testi insufficienti.

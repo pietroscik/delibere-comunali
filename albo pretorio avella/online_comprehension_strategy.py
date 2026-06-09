@@ -38,10 +38,10 @@ def load_jsonl(file_name):
             return None
     return None
 
-def get_raw_text(file_id):
+def get_raw_text(file_stem):
     """Recupera il contenuto testuale grezzo per un dato file_id."""
     # Si assume che file_id corrisponda al nome base del file .txt
-    text_path = TEXTS_DIR / f"{file_id}.txt"
+    text_path = TEXTS_DIR / f"{file_stem}.txt"
     if text_path.exists():
         try:
             with open(text_path, 'r', encoding='utf-8') as f:
@@ -105,38 +105,32 @@ if page == "Panoramica Dati":
 elif page == "Dettaglio Documento":
     st.header("Esplorazione Dettagliata del Documento")
 
-    if df_metadati is None:
-        st.warning("Impossibile caricare i metadati. Assicurati che `albo_metadati.csv` esista.")
+    if df_parsed is None:
+        st.warning("Impossibile caricare i dati analizzati. Assicurati che `allegati_parsed.csv` esista.")
     else:
         # Crea un identificatore unico per la selezione
-        df_metadati['display_name'] = df_metadati['file_name'] + " - " + df_metadati['title'].fillna('')
+        df_parsed['display_name'] = df_parsed['pdf_name'] + " - " + df_parsed['oggetto'].fillna('Senza Oggetto')
 
         selected_doc_display = st.selectbox(
             "Seleziona un documento per visualizzare i dettagli:",
-            options=df_metadati['display_name'].tolist()
+            options=df_parsed['display_name'].tolist()
         )
 
         if selected_doc_display:
-            selected_doc_meta = df_metadati[df_metadati['display_name'] == selected_doc_display].iloc[0]
-            file_id = selected_doc_meta['file_name'] # Si assume che file_name sia l'ID per i file di testo
+            selected_doc_parsed = df_parsed[df_parsed['display_name'] == selected_doc_display].iloc[0]
+            file_id = selected_doc_parsed['pdf_name']
+            file_stem = Path(file_id).stem
 
-            st.subheader(f"Dettagli per: {selected_doc_meta['title']}")
+            st.subheader(f"Dettagli per: {selected_doc_parsed['oggetto']}")
 
             st.write("---")
-            st.markdown("**Metadati di Scraping:**")
-            st.json(selected_doc_meta.drop('display_name').to_dict())
-
-            if df_parsed is not None:
-                parsed_data = df_parsed[df_parsed['file_name'] == file_id]
-                if not parsed_data.empty:
-                    st.write("---")
-                    st.markdown("**Dati Estratti (`allegati_parsed.csv`):**")
-                    st.json(parsed_data.iloc[0].to_dict())
-                else:
-                    st.info("Nessun dato estratto trovato per questo documento in `allegati_parsed.csv`.")
+            st.markdown("**Dati Estratti (`allegati_parsed.csv`):**")
+            # Usiamo to_dict() per una visualizzazione pulita
+            st.json(selected_doc_parsed.drop('display_name').to_dict())
 
             if df_features is not None:
-                features_data = df_features[df_features['file_name'] == file_id]
+                # La colonna chiave in df_features è 'pdf_name'
+                features_data = df_features[df_features['pdf_name'] == file_id]
                 if not features_data.empty:
                     st.write("---")
                     st.markdown("**Feature Analitiche (`documenti_features.csv`):**")
@@ -146,7 +140,7 @@ elif page == "Dettaglio Documento":
 
             st.write("---")
             st.markdown("**Testo Grezzo Estratto dal PDF:**")
-            raw_text = get_raw_text(file_id)
+            raw_text = get_raw_text(file_stem)
             st.text_area("Contenuto del file .txt", raw_text, height=500)
 
 elif page == "Strategia di Comprensione":
