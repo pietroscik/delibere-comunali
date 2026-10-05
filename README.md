@@ -1,5 +1,7 @@
 # Albo Pretorio Avella
 
+> 🔬 **Stato**: Esplorazione sperimentale — pipeline di scraping e analisi NLP su atti dell'Albo Pretorio comunale.
+
 Pipeline Python per:
 
 1. scraping metadati e allegati pubblici dall'Albo Pretorio OpenWeb del Comune di Avella,
@@ -65,7 +67,8 @@ python3 explore_albo.py --base ./albo_download
 ### 1) Solo Scraping
 
 ```bash
-python3 albo_scraper.py --page-from 1 --page-to 80 --only-types Delibera --no-download
+p
+ython3 albo_scraper.py --page-from 1 --page-to 80 --only-types Delibera --no-download
 python3 albo_scraper.py --page-from 1 --page-to 80 --title-regex "bilancio|rendiconto"
 ```
 
@@ -123,7 +126,8 @@ python3 -m streamlit run rag_app.py
 - `albo_download/albo_metadati.csv`: metadati scraping.
 - `albo_download/allegati_parsed.csv`: estrazioni per documento.
 - `albo_download/atti_parsed.csv`: estrazioni raggruppate per atto (collassando allegati multipli).
-- `albo_download/documenti_features.csv`: feature estratte per il machine learning.
+- `albo_download/documenti_features.csv`: feature estratte 
+per il machine learning.
 - `albo_download/documenti_riclassificati.csv`: documenti ambigui risolti e classificati dal modello ML.
 - `albo_download/documenti_corpus.jsonl`: corpus RAG / Addestramento LLM in formato JSONL.
 - `albo_download/failed_extractions.csv`: tracking dei file falliti o con testi insufficienti.
@@ -140,7 +144,8 @@ L'esecuzione di `explore_albo.py` produce un `report.md` con una sintesi dei pro
 
 1.  **Misura**: rigenera i report (`explore_albo.py`) dopo ogni scraping o modifica all'analisi per avere una baseline aggiornata.
 2.  **Correggi**: affronta le criticità con priorità P1 e P2 evidenziate nel report (es. `metadati_senza_tipologia`, `atti_contabili_senza_importi`). Questo potrebbe richiedere modifiche allo script `analyze_albo.py`.
-3.  **Valida**: controlla manualmente un campione di documenti segnalati come ambigui o non categorizzati. Questi documenti sono candidati ideali per costruire un *validation set* per futuri modelli di classificazione.
+3.  **Valida**: controlla manualmente un campione di 
+documenti segnalati come ambigui o non categorizzati. Questi documenti sono candidati ideali per costruire un *validation set* per futuri modelli di classificazione.
 4.  **Addestra**: usa il corpus pulito e deduplicato (`documenti_corpus.jsonl`) per addestrare modelli ML o per alimentare il sistema RAG, solo dopo aver verificato la qualità dell'OCR e del testo.
 5.  **Ripeti**: confronta le percentuali e le distribuzioni nei report tra le varie iterazioni per misurare i miglioramenti.
 
@@ -176,7 +181,8 @@ GOOGLE_EMBEDDING_MODEL_PRIORITY=models/gemini-embedding-001,models/text-embeddin
 - `exceptions.py`: Gerarchia di eccezioni custom (`AlboPretorioError`, `ScraperError`, ecc.).
 - `logger.py` e `metrics.py`: Telemetria, performance logging e tracciamento operazioni.
 
-**Script Operativi:**
+**Script 
+Operativi:**
 - `tests/`: suite di test avanzata basata su Pytest (es. `test_core_modules.py`).
 
 ## Pubblicazione Git
